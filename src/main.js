@@ -145,10 +145,12 @@ set hass(hass) {
     ? hass.states[this.config.entity]
     : null;
 
+  const firstDefined = (...values) => values.find((v) => typeof v !== 'undefined' && v !== null);
+
   if (this.weather) {
     this.temperature = this.config.temp ? hass.states[this.config.temp].state : this.weather.attributes.temperature;
     this.humidity = this.config.humid ? hass.states[this.config.humid].state : this.weather.attributes.humidity;
-    this.pressure = this.config.press ? hass.states[this.config.press].state : this.weather.attributes.pressure;
+    this.pressure = this.config.press ? hass.states[this.config.press].state : firstDefined(this.weather.attributes.pressure, this.weather.attributes.native_pressure);
     this.uv_index = this.config.uv ? hass.states[this.config.uv].state : this.weather.attributes.uv_index;
     this.windSpeed = this.config.windspeed ? hass.states[this.config.windspeed].state : this.weather.attributes.wind_speed;
     this.dew_point = this.config.dew_point ? hass.states[this.config.dew_point].state : this.weather.attributes.dew_point;
@@ -161,7 +163,7 @@ set hass(hass) {
       this.windDirection = this.weather.attributes.wind_bearing;
     }
 
-    this.feels_like = this.config.feels_like && hass.states[this.config.feels_like] ? hass.states[this.config.feels_like].state : this.weather.attributes.apparent_temperature;
+    this.feels_like = this.config.feels_like && hass.states[this.config.feels_like] ? hass.states[this.config.feels_like].state : firstDefined(this.weather.attributes.apparent_temperature, this.weather.attributes.native_apparent_temperature);
     this.description = this.config.description && hass.states[this.config.description] ? hass.states[this.config.description].state : this.weather.attributes.description;
   }
 
@@ -763,22 +765,25 @@ computeForecastData({ config, forecastItems } = this) {
         continue;
       }
     }
+    const tempLowValue = typeof d.templow !== 'undefined' ? d.templow : (typeof d.native_temp_low !== 'undefined' ? d.native_temp_low : d.native_templow);
+    const precipitationValue = typeof d.precipitation !== 'undefined' ? d.precipitation : d.native_precipitation;
+
     dateTime.push(d.datetime);
     tempHigh.push(d.temperature);
-    if (typeof d.templow !== 'undefined') {
-      tempLow.push(d.templow);
+    if (typeof tempLowValue !== 'undefined') {
+      tempLow.push(tempLowValue);
     }
 
     if (roundTemp) {
       tempHigh[i] = Math.round(tempHigh[i]);
-      if (typeof d.templow !== 'undefined') {
+      if (typeof tempLowValue !== 'undefined') {
         tempLow[i] = Math.round(tempLow[i]);
       }
     }
     if (config.forecast.precipitation_type === 'probability') {
       precip.push(d.precipitation_probability);
     } else {
-      precip.push(d.precipitation);
+      precip.push(precipitationValue);
     }
   }
 
