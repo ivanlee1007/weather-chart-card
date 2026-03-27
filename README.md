@@ -1,7 +1,15 @@
 <h1 align="center">Weather Chart Card</h1>
 
-# No Longer Maintained
-This repository is no longer maintained. Feel free to fork it if you find it useful.
+# Maintained fork for HA weather-spec compatibility
+This fork is maintained to improve compatibility with modern Home Assistant weather entities that expose native attribute names.
+
+Compatibility fixes in this fork include:
+- `pressure` fallback to `native_pressure`
+- `templow` fallback to `native_temp_low` / `native_templow`
+- `precipitation` fallback to `native_precipitation`
+- `apparent_temperature` fallback to `native_apparent_temperature`
+
+Goal: keep weather providers compliant with Home Assistant's weather model, while making the card tolerant of both legacy and current field names.
 
 [![Buy me a coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/mlamberts7I)
 [![PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.com/donate/?hosted_button_id=HZUUW64FRM2J2)
@@ -21,6 +29,8 @@ This repository is no longer maintained. Feel free to fork it if you find it use
 
 This card is available in HACS (Home Assistant Community Store).
 HACS is a third party community store and is not included in Home Assistant out of the box.
+
+This fork is intended for setups where the weather provider already follows Home Assistant's weather entity contract, but the card still needs to understand newer/native attribute names.
 
 #### Configuration variables:
 
@@ -103,6 +113,21 @@ HACS is a third party community store and is not included in Home Assistant out 
 | pressure             | string  | none                     | Convert to 'hPa' or 'mmHg' or 'inHg'                                                               |
 | speed                | string  | none                     | Convert to 'km/h' or 'm/s' or 'Bft' or 'mph'                                                       |
 
+### Fork compatibility notes
+
+This fork adds compatibility for providers that expose Home Assistant native weather attribute names instead of older legacy names.
+
+Supported fallback mappings:
+
+| Legacy card field | Native HA field(s) accepted by this fork |
+| ----------------- | ---------------------------------------- |
+| `pressure`        | `native_pressure`                        |
+| `templow`         | `native_temp_low`, `native_templow`      |
+| `precipitation`   | `native_precipitation`                   |
+| `apparent_temperature` | `native_apparent_temperature`       |
+
+This means compliant weather providers do not need to add non-standard duplicate fields just to satisfy the card.
+
 ###### What custom icons can I use?
 Icons should be in svg format. Icons should have names as shown [here](https://github.com/mlamberts78/weather-chart-card/blob/master/src/const.js#L24). Example:
 ![130360372-76d70c42-986c-46e3-b9b5-810f0317f94f](https://github.com/mlamberts78/weather-chart-card/assets/93537082/d3ee55a2-e64f-4354-b36d-9faf6ea37361)
@@ -139,6 +164,25 @@ forecast:
   condition_icons: false
   show_wind_forecast: false
 ```
+
+###### OpenCWB / HA-native compatible example
+```yaml
+type: custom:weather-chart-card
+entity: weather.opencwa_xin_dian_qu
+show_main: true
+show_attributes: true
+show_current_condition: true
+forecast:
+  type: daily
+  precipitation_type: rainfall
+```
+
+Notes:
+- This fork reads both legacy and HA-native field names.
+- Daily low temperature can come from `templow`, `native_temp_low`, or `native_templow`.
+- Pressure can come from `pressure` or `native_pressure`.
+- Rainfall can come from `precipitation` or `native_precipitation`.
+- If your provider only has probability values, set `precipitation_type: probability`.
 
 ###### Custom units
 ![Units](https://github.com/mlamberts78/weather-chart-card/assets/93537082/e72862ee-9bb7-4f97-9a3c-b17663c458aa)
