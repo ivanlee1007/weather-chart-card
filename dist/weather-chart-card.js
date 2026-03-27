@@ -18457,12 +18457,13 @@ drawChart({ config, language, weather, forecastItems } = this) {
   }
   var tempUnit = this._hass.config.unit_system.temperature;
   var lengthUnit = this._hass.config.unit_system.length;
-  if (config.forecast.precipitation_type === 'probability') {
+  const data = this.computeForecastData();
+  const precipitationType = data.effectivePrecipitationType;
+  if (precipitationType === 'probability') {
     var precipUnit = '%';
   } else {
     var precipUnit = lengthUnit === 'km' ? this.ll('units')['mm'] : this.ll('units')['in'];
   }
-  const data = this.computeForecastData();
   const forecastTimeZone = this.getForecastTimeZone();
 
   var style = getComputedStyle(document.body);
@@ -18479,7 +18480,7 @@ drawChart({ config, language, weather, forecastItems } = this) {
 
   let precipMax;
 
-  if (config.forecast.precipitation_type === 'probability') {
+  if (precipitationType === 'probability') {
     precipMax = 100;
   } else {
     if (config.forecast.type === 'hourly') {
@@ -18534,14 +18535,12 @@ drawChart({ config, language, weather, forecastItems } = this) {
           if (rainfall > 0) {
             return 'true';
           }
-          if (config.forecast.precipitation_type === 'rainfall' && config.forecast.show_probability && probability !== undefined && probability !== null && probability > 0) {
+          if (precipitationType === 'rainfall' && config.forecast.show_probability && probability !== undefined && probability !== null && probability > 0) {
             return 'true';
           }
           return false;
         },
       formatter: function (value, context) {
-        const precipitationType = config.forecast.precipitation_type;
-
         const rainfall = context.dataset.data[context.dataIndex];
         const probability = data.forecast[context.dataIndex].precipitation_probability;
 
@@ -18636,7 +18635,7 @@ drawChart({ config, language, weather, forecastItems } = this) {
           ticks: {
               maxRotation: 0,
               color: config.forecast.chart_datetime_color || textColor,
-              padding: config.forecast.precipitation_type === 'rainfall' && config.forecast.show_probability && config.forecast.type !== 'hourly' ? 4 : 10,
+              padding: precipitationType === 'rainfall' && config.forecast.show_probability && config.forecast.type !== 'hourly' ? 4 : 10,
               callback: function (value, index, values) {
                   var datetime = this.getLabelForValue(value);
                   var dateObj = new Date(datetime);
@@ -18717,7 +18716,7 @@ drawChart({ config, language, weather, forecastItems } = this) {
           borderColor: context => context.dataset.backgroundColor,
           borderRadius: 0,
           borderWidth: 1.5,
-          padding: config.forecast.precipitation_type === 'rainfall' && config.forecast.show_probability && config.forecast.type !== 'hourly' ? 3 : 4,
+          padding: precipitationType === 'rainfall' && config.forecast.show_probability && config.forecast.type !== 'hourly' ? 3 : 4,
           color: chart_text_color || textColor,
           font: {
             size: config.forecast.labels_font_size,
@@ -18758,7 +18757,7 @@ drawChart({ config, language, weather, forecastItems } = this) {
       var probability = data.forecast[context.dataIndex].precipitation_probability;
       var unit = context.datasetIndex === 2 ? precipUnit : tempUnit;
 
-      if (config.forecast.precipitation_type === 'rainfall' && context.datasetIndex === 2 && config.forecast.show_probability && probability !== undefined && probability !== null) {
+      if (precipitationType === 'rainfall' && context.datasetIndex === 2 && config.forecast.show_probability && probability !== undefined && probability !== null) {
         return label + ': ' + value + ' ' + precipUnit + ' / ' + Math.round(probability) + '%';
       } else {
         return label + ': ' + value + ' ' + unit;
@@ -18984,9 +18983,42 @@ getVisibleForecasts({ config, forecastItems } = this) {
   return forecast;
 }
 
+getEffectivePrecipitationType(forecast, config = this.config) {
+  const configuredType = (config && config.forecast && config.forecast.precipitation_type) || 'rainfall';
+
+  if (configuredType !== 'rainfall') {
+    return configuredType;
+  }
+
+  if (!config || !config.forecast || config.forecast.type === 'hourly') {
+    return configuredType;
+  }
+
+  if (!Array.isArray(forecast) || !forecast.length) {
+    return configuredType;
+  }
+
+  const hasRainfallAmount = forecast.some((entry) => {
+    const precipitation = this.getNumericForecastValue(entry, 'precipitation', 'native_precipitation');
+    return typeof precipitation !== 'undefined' && precipitation > 0;
+  });
+
+  if (hasRainfallAmount) {
+    return configuredType;
+  }
+
+  const hasProbability = forecast.some((entry) => {
+    const probability = this.getNumericForecastValue(entry, 'precipitation_probability');
+    return typeof probability !== 'undefined' && probability > 0;
+  });
+
+  return hasProbability ? 'probability' : configuredType;
+}
+
 computeForecastData({ config, forecastItems } = this) {
   var forecast = this.getVisibleForecasts({ config, forecastItems });
   var roundTemp = config.forecast.round_temp == true;
+  var effectivePrecipitationType = this.getEffectivePrecipitationType(forecast, config);
   var dateTime = [];
   var tempHigh = [];
   var tempLow = [];
@@ -19012,7 +19044,7 @@ computeForecastData({ config, forecastItems } = this) {
         tempLow[i] = Math.round(tempLow[i]);
       }
     }
-    if (config.forecast.precipitation_type === 'probability') {
+    if (effectivePrecipitationType === 'probability') {
       precip.push(this.getNumericForecastValue(d, 'precipitation_probability') || 0);
     } else {
       precip.push(precipitationValue);
@@ -19025,6 +19057,7 @@ computeForecastData({ config, forecastItems } = this) {
     tempHigh,
     tempLow,
     precip,
+    effectivePrecipitationType,
   }
 }
 

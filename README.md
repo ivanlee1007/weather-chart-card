@@ -9,6 +9,7 @@ Compatibility fixes in this fork include:
 - `precipitation` fallback to `native_precipitation`
 - `apparent_temperature` fallback to `native_apparent_temperature`
 - daily forecast auto-merge when a provider exposes multiple periods for the same calendar day (for example day/night pairs), so the card shows one weekday bucket instead of duplicated labels
+- daily forecast precipitation fallback: when a provider exposes probability but no daily rainfall amount, the card automatically shows precipitation probability instead of misleading all-zero rainfall bars
 
 Goal: keep weather providers compliant with Home Assistant's weather model, while making the card tolerant of both legacy and current field names.
 
