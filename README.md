@@ -8,6 +8,7 @@ Compatibility fixes in this fork include:
 - `templow` fallback to `native_temp_low` / `native_templow`
 - `precipitation` fallback to `native_precipitation`
 - `apparent_temperature` fallback to `native_apparent_temperature`
+- daily forecast auto-merge when a provider exposes multiple periods for the same calendar day (for example day/night pairs), so the card shows one weekday bucket instead of duplicated labels
 
 Goal: keep weather providers compliant with Home Assistant's weather model, while making the card tolerant of both legacy and current field names.
 

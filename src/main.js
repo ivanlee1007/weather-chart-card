@@ -733,14 +733,21 @@ drawChart({ config, language, weather, forecastItems } = this) {
           callbacks: {
             title: function (TooltipItem) {
               var datetime = TooltipItem[0].label;
-              return new Date(datetime).toLocaleDateString(language, {
-                month: 'short',
-                day: 'numeric',
-                weekday: 'short',
-                hour: 'numeric',
-                minute: 'numeric',
-                hour12: config.use_12hour_format,
-              });
+              const titleOptions = config.forecast.type === 'hourly'
+                ? {
+                    month: 'short',
+                    day: 'numeric',
+                    weekday: 'short',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: config.use_12hour_format,
+                  }
+                : {
+                    month: 'short',
+                    day: 'numeric',
+                    weekday: 'short',
+                  };
+              return new Date(datetime).toLocaleDateString(language, titleOptions);
             },
     label: function (context) {
       var label = context.dataset.label;
@@ -761,8 +768,197 @@ drawChart({ config, language, weather, forecastItems } = this) {
   });
 }
 
+getForecastValue(entry, ...keys) {
+  if (!entry) {
+    return undefined;
+  }
+
+  for (const key of keys) {
+    if (typeof entry[key] !== 'undefined' && entry[key] !== null) {
+      return entry[key];
+    }
+  }
+  return undefined;
+}
+
+getNumericForecastValue(entry, ...keys) {
+  const value = this.getForecastValue(entry, ...keys);
+  if (typeof value === 'undefined' || value === null || value === '') {
+    return undefined;
+  }
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+}
+
+roundForecastNumber(value, digits = 2) {
+  if (!Number.isFinite(value)) {
+    return undefined;
+  }
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+}
+
+getForecastConditionScore(entry) {
+  const precipitation = this.getNumericForecastValue(entry, 'precipitation', 'native_precipitation') || 0;
+  const probability = this.getNumericForecastValue(entry, 'precipitation_probability') || 0;
+  const severityByCondition = {
+    lightning: 70,
+    'lightning-rainy': 70,
+    pouring: 60,
+    rainy: 50,
+    snowy: 50,
+    'snowy-rainy': 50,
+    hail: 45,
+    fog: 30,
+    cloudy: 20,
+    windy: 20,
+    partlycloudy: 10,
+    sunny: 0,
+    'clear-night': 0,
+  };
+  const condition = entry ? entry.condition : undefined;
+  const severity = severityByCondition[condition] || 0;
+  return (precipitation * 100) + probability + severity;
+}
+
+pickRepresentativeForecast(entries) {
+  if (!entries.length) {
+    return null;
+  }
+
+  return entries.slice().sort((a, b) => {
+    return this.getForecastConditionScore(b) - this.getForecastConditionScore(a);
+  })[0];
+}
+
+mergeDailyForecastEntries(entries, earliestDate) {
+  if (!entries.length) {
+    return null;
+  }
+
+  if (entries.length === 1) {
+    return entries[0];
+  }
+
+  const representative = this.pickRepresentativeForecast(entries) || entries[0];
+  const temperatures = entries
+    .map((entry) => this.getNumericForecastValue(entry, 'temperature', 'native_temperature'))
+    .filter((value) => typeof value !== 'undefined');
+  const lowTemperatures = entries
+    .map((entry) => this.getNumericForecastValue(entry, 'templow', 'native_temp_low', 'native_templow', 'temperature', 'native_temperature'))
+    .filter((value) => typeof value !== 'undefined');
+  const precipitations = entries
+    .map((entry) => this.getNumericForecastValue(entry, 'precipitation', 'native_precipitation'))
+    .filter((value) => typeof value !== 'undefined');
+  const probabilities = entries
+    .map((entry) => this.getNumericForecastValue(entry, 'precipitation_probability'))
+    .filter((value) => typeof value !== 'undefined');
+  const windSpeeds = entries
+    .map((entry) => this.getNumericForecastValue(entry, 'wind_speed', 'native_wind_speed'))
+    .filter((value) => typeof value !== 'undefined');
+  const windGusts = entries
+    .map((entry) => this.getNumericForecastValue(entry, 'wind_gust_speed', 'native_wind_gust_speed'))
+    .filter((value) => typeof value !== 'undefined');
+  const windEntry = entries.slice().sort((a, b) => {
+    return (this.getNumericForecastValue(b, 'wind_speed', 'native_wind_speed') || 0)
+      - (this.getNumericForecastValue(a, 'wind_speed', 'native_wind_speed') || 0);
+  })[0] || representative;
+
+  const mergedDate = new Date(earliestDate);
+  mergedDate.setHours(12, 0, 0, 0);
+
+  const temperatureHigh = temperatures.length ? Math.max(...temperatures) : this.getNumericForecastValue(representative, 'temperature', 'native_temperature');
+  const temperatureLow = lowTemperatures.length ? Math.min(...lowTemperatures) : this.getNumericForecastValue(representative, 'templow', 'native_temp_low', 'native_templow', 'temperature', 'native_temperature');
+  const precipitation = precipitations.length
+    ? this.roundForecastNumber(precipitations.reduce((sum, value) => sum + value, 0), 2)
+    : this.getNumericForecastValue(representative, 'precipitation', 'native_precipitation');
+  const precipitationProbability = probabilities.length ? Math.max(...probabilities) : this.getNumericForecastValue(representative, 'precipitation_probability');
+  const windSpeed = windSpeeds.length ? Math.max(...windSpeeds) : this.getNumericForecastValue(windEntry, 'wind_speed', 'native_wind_speed');
+  const windGust = windGusts.length ? Math.max(...windGusts) : this.getNumericForecastValue(windEntry, 'wind_gust_speed', 'native_wind_gust_speed');
+
+  return {
+    ...representative,
+    datetime: mergedDate.toISOString(),
+    temperature: temperatureHigh,
+    native_temperature: temperatureHigh,
+    templow: temperatureLow,
+    native_temp_low: temperatureLow,
+    native_templow: temperatureLow,
+    precipitation,
+    native_precipitation: precipitation,
+    precipitation_probability: precipitationProbability,
+    wind_speed: windSpeed,
+    native_wind_speed: windSpeed,
+    wind_gust_speed: windGust,
+    native_wind_gust_speed: windGust,
+    wind_bearing: this.getForecastValue(windEntry, 'wind_bearing'),
+  };
+}
+
+aggregateDailyForecasts(forecasts) {
+  if (!Array.isArray(forecasts) || !forecasts.length) {
+    return [];
+  }
+
+  const orderedBuckets = [];
+  const bucketsByDate = new Map();
+
+  forecasts.forEach((entry) => {
+    const date = new Date(entry.datetime);
+    if (Number.isNaN(date.getTime())) {
+      orderedBuckets.push({ passthrough: entry });
+      return;
+    }
+
+    const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    let bucket = bucketsByDate.get(dateKey);
+
+    if (!bucket) {
+      bucket = {
+        earliestDate: date,
+        entries: [],
+      };
+      bucketsByDate.set(dateKey, bucket);
+      orderedBuckets.push(bucket);
+    }
+
+    if (date < bucket.earliestDate) {
+      bucket.earliestDate = date;
+    }
+    bucket.entries.push(entry);
+  });
+
+  return orderedBuckets
+    .map((bucket) => {
+      if (bucket.passthrough) {
+        return bucket.passthrough;
+      }
+      return this.mergeDailyForecastEntries(bucket.entries, bucket.earliestDate);
+    })
+    .filter((entry) => !!entry);
+}
+
+getVisibleForecasts({ config, forecastItems } = this) {
+  let forecast = this.forecasts ? [...this.forecasts] : [];
+
+  if (config.forecast.type === 'daily') {
+    forecast = this.aggregateDailyForecasts(forecast);
+  }
+
+  if (config.autoscroll) {
+    const cutoff = (config.forecast.type === 'hourly' ? 1 : 24) * 60 * 60 * 1000;
+    forecast = forecast.filter((entry) => new Date() - new Date(entry.datetime) <= cutoff);
+  }
+
+  if (forecastItems > 0) {
+    forecast = forecast.slice(0, forecastItems);
+  }
+
+  return forecast;
+}
+
 computeForecastData({ config, forecastItems } = this) {
-  var forecast = this.forecasts ? this.forecasts.slice(0, forecastItems) : [];
+  var forecast = this.getVisibleForecasts({ config, forecastItems });
   var roundTemp = config.forecast.round_temp == true;
   var dateTime = [];
   var tempHigh = [];
@@ -771,29 +967,26 @@ computeForecastData({ config, forecastItems } = this) {
 
   for (var i = 0; i < forecast.length; i++) {
     var d = forecast[i];
-    if (config.autoscroll) {
-      const cutoff = (config.forecast.type === 'hourly' ? 1 : 24) * 60 * 60 * 1000;
-      if (new Date() - new Date(d.datetime) > cutoff) {
-        continue;
-      }
-    }
-    const tempLowValue = typeof d.templow !== 'undefined' ? d.templow : (typeof d.native_temp_low !== 'undefined' ? d.native_temp_low : d.native_templow);
-    const precipitationValue = typeof d.precipitation !== 'undefined' ? d.precipitation : d.native_precipitation;
+    const tempHighValue = this.getNumericForecastValue(d, 'temperature', 'native_temperature');
+    const tempLowValue = this.getNumericForecastValue(d, 'templow', 'native_temp_low', 'native_templow');
+    const precipitationValue = this.getNumericForecastValue(d, 'precipitation', 'native_precipitation') || 0;
 
     dateTime.push(d.datetime);
-    tempHigh.push(d.temperature);
+    tempHigh.push(tempHighValue);
     if (typeof tempLowValue !== 'undefined') {
       tempLow.push(tempLowValue);
     }
 
     if (roundTemp) {
-      tempHigh[i] = Math.round(tempHigh[i]);
+      if (typeof tempHighValue !== 'undefined') {
+        tempHigh[i] = Math.round(tempHigh[i]);
+      }
       if (typeof tempLowValue !== 'undefined') {
         tempLow[i] = Math.round(tempLow[i]);
       }
     }
     if (config.forecast.precipitation_type === 'probability') {
-      precip.push(d.precipitation_probability);
+      precip.push(this.getNumericForecastValue(d, 'precipitation_probability') || 0);
     } else {
       precip.push(precipitationValue);
     }
@@ -1239,7 +1432,7 @@ const timeOptions = {
 }
 
 renderForecastConditionIcons({ config, forecastItems, sun } = this) {
-  const forecast = this.forecasts ? this.forecasts.slice(0, forecastItems) : [];
+  const forecast = this.getVisibleForecasts({ config, forecastItems });
 
   if (config.forecast.condition_icons === false) {
     return html``;
@@ -1252,7 +1445,6 @@ renderForecastConditionIcons({ config, forecastItems, sun } = this) {
         const sunriseTime = new Date(sun.attributes.next_rising);
         const sunsetTime = new Date(sun.attributes.next_setting);
 
-        // Adjust sunrise and sunset times to match the date of forecastTime
         const adjustedSunriseTime = new Date(forecastTime);
         adjustedSunriseTime.setHours(sunriseTime.getHours());
         adjustedSunriseTime.setMinutes(sunriseTime.getMinutes());
@@ -1266,10 +1458,8 @@ renderForecastConditionIcons({ config, forecastItems, sun } = this) {
         let isDayTime;
 
         if (config.forecast.type === 'daily') {
-          // For daily forecast, assume it's day time
           isDayTime = true;
         } else {
-          // For other forecast types, determine based on sunrise and sunset times
           isDayTime = forecastTime >= adjustedSunriseTime && forecastTime <= adjustedSunsetTime;
         }
 
@@ -1304,35 +1494,40 @@ renderWind({ config, weather, windSpeed, windDirection, forecastItems } = this) 
     return html``;
   }
 
-  const forecast = this.forecasts ? this.forecasts.slice(0, forecastItems) : [];
+  const forecast = this.getVisibleForecasts({ config, forecastItems });
 
   return html`
     <div class="wind-details">
       ${showWindForecast ? html`
         ${forecast.map((item) => {
-          let dWindSpeed = item.wind_speed;
+          const itemWindSpeed = this.getNumericForecastValue(item, 'wind_speed', 'native_wind_speed');
+          let dWindSpeed = itemWindSpeed;
+
+          if (typeof dWindSpeed === 'undefined') {
+            return html``;
+          }
 
           if (this.unitSpeed !== this.weather.attributes.wind_speed_unit) {
             if (this.unitSpeed === 'm/s') {
               if (this.weather.attributes.wind_speed_unit === 'km/h') {
-                dWindSpeed = Math.round(item.wind_speed * 1000 / 3600);
+                dWindSpeed = Math.round(itemWindSpeed * 1000 / 3600);
               } else if (this.weather.attributes.wind_speed_unit === 'mph') {
-                dWindSpeed = Math.round(item.wind_speed * 0.44704);
+                dWindSpeed = Math.round(itemWindSpeed * 0.44704);
               }
             } else if (this.unitSpeed === 'km/h') {
               if (this.weather.attributes.wind_speed_unit === 'm/s') {
-                dWindSpeed = Math.round(item.wind_speed * 3.6);
+                dWindSpeed = Math.round(itemWindSpeed * 3.6);
               } else if (this.weather.attributes.wind_speed_unit === 'mph') {
-                dWindSpeed = Math.round(item.wind_speed * 1.60934);
+                dWindSpeed = Math.round(itemWindSpeed * 1.60934);
               }
             } else if (this.unitSpeed === 'mph') {
               if (this.weather.attributes.wind_speed_unit === 'm/s') {
-                dWindSpeed = Math.round(item.wind_speed / 0.44704);
+                dWindSpeed = Math.round(itemWindSpeed / 0.44704);
               } else if (this.weather.attributes.wind_speed_unit === 'km/h') {
-                dWindSpeed = Math.round(item.wind_speed / 1.60934);
+                dWindSpeed = Math.round(itemWindSpeed / 1.60934);
               }
             } else if (this.unitSpeed === 'Bft') {
-              dWindSpeed = this.calculateBeaufortScale(item.wind_speed);
+              dWindSpeed = this.calculateBeaufortScale(itemWindSpeed);
             }
           } else {
             dWindSpeed = Math.round(dWindSpeed);
