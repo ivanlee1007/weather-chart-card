@@ -44,6 +44,9 @@ static getStubConfig(hass, unusedEntities, allEntities) {
     show_wind_gust_speed: false,
     show_visibility: false,
     show_last_changed: false,
+    show_text_sensor: false,
+    text_sensor_entity: '',
+    text_sensor_title: '',
     use_12hour_format: false,
     icons_size: 25,
     animated_icons: false,
@@ -97,6 +100,9 @@ setConfig(config) {
     show_visibility: false,
     show_last_changed: false,
     show_description: false,
+    show_text_sensor: false,
+    text_sensor_entity: '',
+    text_sensor_title: '',
     ...config,
     forecast: {
       precipitation_type: 'rainfall',
@@ -1239,6 +1245,23 @@ updateChart({ forecasts, forecastChart } = this) {
           margin-top: 5px;
           font-weight: 400;
         }
+        .text-sensor-section {
+          margin-top: 14px;
+          padding-top: 12px;
+          border-top: 1px solid var(--divider-color);
+          cursor: pointer;
+        }
+        .text-sensor-title {
+          font-size: 14px;
+          font-weight: 600;
+          margin-bottom: 8px;
+        }
+        .text-sensor-content {
+          font-size: 13px;
+          line-height: 1.5;
+          white-space: pre-wrap;
+          color: var(--secondary-text-color);
+        }
         .updated {
           font-size: 13px;
           align-items: right;
@@ -1256,11 +1279,45 @@ updateChart({ forecasts, forecastChart } = this) {
           </div>
           ${this.renderForecastConditionIcons()}
           ${this.renderWind()}
+          ${this.renderTextSensor()}
           ${this.renderLastUpdated()}
         </div>
       </ha-card>
     `;
   }
+
+getTextSensorState() {
+  if (!this._hass || !this._hass.states || !this.config.text_sensor_entity) {
+    return null;
+  }
+
+  return this._hass.states[this.config.text_sensor_entity] || null;
+}
+
+renderTextSensor({ config } = this) {
+  if (config.show_text_sensor !== true) {
+    return html``;
+  }
+
+  const textSensor = this.getTextSensorState();
+  if (!textSensor) {
+    return html``;
+  }
+
+  const sensorState = textSensor.state;
+  if (!sensorState || ['unknown', 'unavailable', 'None', 'null'].includes(sensorState)) {
+    return html``;
+  }
+
+  const title = config.text_sensor_title || textSensor.attributes.friendly_name || this.config.text_sensor_entity;
+
+  return html`
+    <div class="text-sensor-section" @click="${() => this.showMoreInfo(this.config.text_sensor_entity)}">
+      <div class="text-sensor-title">${title}</div>
+      <div class="text-sensor-content">${sensorState}</div>
+    </div>
+  `;
+}
 
 renderMain({ config, sun, weather, temperature, feels_like, description } = this) {
   if (config.show_main === false)

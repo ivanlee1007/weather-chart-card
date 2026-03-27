@@ -921,6 +921,7 @@ class WeatherChartCardEditor extends s {
       _config: { type: Object },
       currentPage: { type: String },
       entities: { type: Array },
+      sensorEntities: { type: Array },
       hass: { type: Object },
       _entity: { type: String },
     };
@@ -931,6 +932,7 @@ class WeatherChartCardEditor extends s {
     this.currentPage = 'card';
     this._entity = '';
     this.entities = [];
+    this.sensorEntities = [];
     this._formValueChanged = this._formValueChanged.bind(this);
   }
 
@@ -989,7 +991,9 @@ class WeatherChartCardEditor extends s {
 
   fetchEntities() {
     if (this.hass) {
-      this.entities = Object.keys(this.hass.states).filter((e) => e.startsWith('weather.'));
+      const stateIds = Object.keys(this.hass.states);
+      this.entities = stateIds.filter((e) => e.startsWith('weather.'));
+      this.sensorEntities = stateIds.filter((e) => e.startsWith('sensor.'));
       this.requestUpdate();
     }
   }
@@ -1394,6 +1398,34 @@ class WeatherChartCardEditor extends s {
           </label>
         ` : ''}
       </div>
+          <div class="switch-container">
+            <ha-switch
+              @change="${(e) => this._valueChanged(e, 'show_text_sensor')}"
+              .checked="${this._config.show_text_sensor === true}"
+            ></ha-switch>
+            <label class="switch-label">
+              Show text sensor content
+            </label>
+          </div>
+          <div class="textfield-container" style="${this._config.show_text_sensor ? 'display: flex;' : 'display: none;'}">
+            <ha-select
+              naturalMenuWidth
+              fixedMenuPosition
+              label="Text sensor entity"
+              .configValue=${'text_sensor_entity'}
+              .value=${this._config.text_sensor_entity || ''}
+              @change=${(e) => this._valueChanged(e, 'text_sensor_entity')}
+              @closed=${(ev) => ev.stopPropagation()}
+            >
+              <ha-list-item .value=${''}>Select sensor</ha-list-item>
+              ${this.sensorEntities.map((entity) => x`<ha-list-item .value=${entity}>${entity}</ha-list-item>`)}
+            </ha-select>
+            <ha-textfield
+              label="Text sensor title"
+              .value="${this._config.text_sensor_title || ''}"
+              @change="${(e) => this._valueChanged(e, 'text_sensor_title')}"
+            ></ha-textfield>
+          </div>
           <div class="switch-container">
             <ha-switch
               @change="${(e) => this._valueChanged(e, 'show_last_changed')}"
@@ -18030,6 +18062,9 @@ static getStubConfig(hass, unusedEntities, allEntities) {
     show_wind_gust_speed: false,
     show_visibility: false,
     show_last_changed: false,
+    show_text_sensor: false,
+    text_sensor_entity: '',
+    text_sensor_title: '',
     use_12hour_format: false,
     icons_size: 25,
     animated_icons: false,
@@ -18083,6 +18118,9 @@ setConfig(config) {
     show_visibility: false,
     show_last_changed: false,
     show_description: false,
+    show_text_sensor: false,
+    text_sensor_entity: '',
+    text_sensor_title: '',
     ...config,
     forecast: {
       precipitation_type: 'rainfall',
@@ -19225,6 +19263,23 @@ updateChart({ forecasts, forecastChart } = this) {
           margin-top: 5px;
           font-weight: 400;
         }
+        .text-sensor-section {
+          margin-top: 14px;
+          padding-top: 12px;
+          border-top: 1px solid var(--divider-color);
+          cursor: pointer;
+        }
+        .text-sensor-title {
+          font-size: 14px;
+          font-weight: 600;
+          margin-bottom: 8px;
+        }
+        .text-sensor-content {
+          font-size: 13px;
+          line-height: 1.5;
+          white-space: pre-wrap;
+          color: var(--secondary-text-color);
+        }
         .updated {
           font-size: 13px;
           align-items: right;
@@ -19242,11 +19297,45 @@ updateChart({ forecasts, forecastChart } = this) {
           </div>
           ${this.renderForecastConditionIcons()}
           ${this.renderWind()}
+          ${this.renderTextSensor()}
           ${this.renderLastUpdated()}
         </div>
       </ha-card>
     `;
   }
+
+getTextSensorState() {
+  if (!this._hass || !this._hass.states || !this.config.text_sensor_entity) {
+    return null;
+  }
+
+  return this._hass.states[this.config.text_sensor_entity] || null;
+}
+
+renderTextSensor({ config } = this) {
+  if (config.show_text_sensor !== true) {
+    return x``;
+  }
+
+  const textSensor = this.getTextSensorState();
+  if (!textSensor) {
+    return x``;
+  }
+
+  const sensorState = textSensor.state;
+  if (!sensorState || ['unknown', 'unavailable', 'None', 'null'].includes(sensorState)) {
+    return x``;
+  }
+
+  const title = config.text_sensor_title || textSensor.attributes.friendly_name || this.config.text_sensor_entity;
+
+  return x`
+    <div class="text-sensor-section" @click="${() => this.showMoreInfo(this.config.text_sensor_entity)}">
+      <div class="text-sensor-title">${title}</div>
+      <div class="text-sensor-content">${sensorState}</div>
+    </div>
+  `;
+}
 
 renderMain({ config, sun, weather, temperature, feels_like, description } = this) {
   if (config.show_main === false)
