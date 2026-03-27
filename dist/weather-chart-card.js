@@ -18463,6 +18463,7 @@ drawChart({ config, language, weather, forecastItems } = this) {
     var precipUnit = lengthUnit === 'km' ? this.ll('units')['mm'] : this.ll('units')['in'];
   }
   const data = this.computeForecastData();
+  const forecastTimeZone = this.getForecastTimeZone();
 
   var style = getComputedStyle(document.body);
   var backgroundColor = style.getPropertyValue('--card-background-color');
@@ -18639,8 +18640,20 @@ drawChart({ config, language, weather, forecastItems } = this) {
               callback: function (value, index, values) {
                   var datetime = this.getLabelForValue(value);
                   var dateObj = new Date(datetime);
-        
+                  var dateParts = new Intl.DateTimeFormat('en-US', {
+                      timeZone: forecastTimeZone,
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false,
+                  }).formatToParts(dateObj).reduce((acc, part) => {
+                      if (part.type !== 'literal') {
+                        acc[part.type] = part.value;
+                      }
+                      return acc;
+                  }, {});
+
                   var timeFormatOptions = {
+                      timeZone: forecastTimeZone,
                       hour12: config.use_12hour_format,
                       hour: 'numeric',
                       ...(config.use_12hour_format ? {} : { minute: 'numeric' }),
@@ -18648,8 +18661,9 @@ drawChart({ config, language, weather, forecastItems } = this) {
 
                   var time = dateObj.toLocaleTimeString(language, timeFormatOptions);
 
-                  if (dateObj.getHours() === 0 && dateObj.getMinutes() === 0 && config.forecast.type === 'hourly') {
+                  if (dateParts.hour === '00' && dateParts.minute === '00' && config.forecast.type === 'hourly') {
                       var dateFormatOptions = {
+                          timeZone: forecastTimeZone,
                           day: 'numeric',
                           month: 'short',
                       };
@@ -18659,7 +18673,7 @@ drawChart({ config, language, weather, forecastItems } = this) {
                   }
 
                   if (config.forecast.type !== 'hourly') {
-                      var weekday = dateObj.toLocaleString(language, { weekday: 'short' }).toUpperCase();
+                      var weekday = dateObj.toLocaleString(language, { weekday: 'short', timeZone: forecastTimeZone }).toUpperCase();
                       return weekday;
                   }
 
@@ -18719,21 +18733,24 @@ drawChart({ config, language, weather, forecastItems } = this) {
           callbacks: {
             title: function (TooltipItem) {
               var datetime = TooltipItem[0].label;
-              const titleOptions = config.forecast.type === 'hourly'
-                ? {
-                    month: 'short',
-                    day: 'numeric',
-                    weekday: 'short',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    hour12: config.use_12hour_format,
-                  }
-                : {
-                    month: 'short',
-                    day: 'numeric',
-                    weekday: 'short',
-                  };
-              return new Date(datetime).toLocaleDateString(language, titleOptions);
+              const titleDate = new Date(datetime);
+              if (config.forecast.type === 'hourly') {
+                return titleDate.toLocaleString(language, {
+                  timeZone: forecastTimeZone,
+                  month: 'short',
+                  day: 'numeric',
+                  weekday: 'short',
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: config.use_12hour_format,
+                });
+              }
+              return titleDate.toLocaleDateString(language, {
+                timeZone: forecastTimeZone,
+                month: 'short',
+                day: 'numeric',
+                weekday: 'short',
+              });
             },
     label: function (context) {
       var label = context.dataset.label;
@@ -18784,6 +18801,35 @@ roundForecastNumber(value, digits = 2) {
   return Math.round(value * factor) / factor;
 }
 
+getForecastTimeZone() {
+  return (this._hass && this._hass.config && this._hass.config.time_zone)
+    || Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+getDatePartsForTimeZone(value, timeZone = this.getForecastTimeZone()) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const parts = {};
+  new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date).forEach((part) => {
+    if (part.type !== 'literal') {
+      parts[part.type] = part.value;
+    }
+  });
+
+  return parts;
+}
+
 getForecastConditionScore(entry) {
   const precipitation = this.getNumericForecastValue(entry, 'precipitation', 'native_precipitation') || 0;
   const probability = this.getNumericForecastValue(entry, 'precipitation_probability') || 0;
@@ -18817,7 +18863,7 @@ pickRepresentativeForecast(entries) {
   })[0];
 }
 
-mergeDailyForecastEntries(entries, earliestDate) {
+mergeDailyForecastEntries(entries) {
   if (!entries.length) {
     return null;
   }
@@ -18827,6 +18873,7 @@ mergeDailyForecastEntries(entries, earliestDate) {
   }
 
   const representative = this.pickRepresentativeForecast(entries) || entries[0];
+  const earliestEntry = entries.slice().sort((a, b) => new Date(a.datetime) - new Date(b.datetime))[0] || representative;
   const temperatures = entries
     .map((entry) => this.getNumericForecastValue(entry, 'temperature', 'native_temperature'))
     .filter((value) => typeof value !== 'undefined');
@@ -18850,9 +18897,6 @@ mergeDailyForecastEntries(entries, earliestDate) {
       - (this.getNumericForecastValue(a, 'wind_speed', 'native_wind_speed') || 0);
   })[0] || representative;
 
-  const mergedDate = new Date(earliestDate);
-  mergedDate.setHours(12, 0, 0, 0);
-
   const temperatureHigh = temperatures.length ? Math.max(...temperatures) : this.getNumericForecastValue(representative, 'temperature', 'native_temperature');
   const temperatureLow = lowTemperatures.length ? Math.min(...lowTemperatures) : this.getNumericForecastValue(representative, 'templow', 'native_temp_low', 'native_templow', 'temperature', 'native_temperature');
   const precipitation = precipitations.length
@@ -18864,7 +18908,7 @@ mergeDailyForecastEntries(entries, earliestDate) {
 
   return {
     ...representative,
-    datetime: mergedDate.toISOString(),
+    datetime: earliestEntry.datetime,
     temperature: temperatureHigh,
     native_temperature: temperatureHigh,
     templow: temperatureLow,
@@ -18888,29 +18932,26 @@ aggregateDailyForecasts(forecasts) {
 
   const orderedBuckets = [];
   const bucketsByDate = new Map();
+  const forecastTimeZone = this.getForecastTimeZone();
 
   forecasts.forEach((entry) => {
-    const date = new Date(entry.datetime);
-    if (Number.isNaN(date.getTime())) {
+    const dateParts = this.getDatePartsForTimeZone(entry.datetime, forecastTimeZone);
+    if (!dateParts) {
       orderedBuckets.push({ passthrough: entry });
       return;
     }
 
-    const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    const dateKey = `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
     let bucket = bucketsByDate.get(dateKey);
 
     if (!bucket) {
       bucket = {
-        earliestDate: date,
         entries: [],
       };
       bucketsByDate.set(dateKey, bucket);
       orderedBuckets.push(bucket);
     }
 
-    if (date < bucket.earliestDate) {
-      bucket.earliestDate = date;
-    }
     bucket.entries.push(entry);
   });
 
@@ -18919,7 +18960,7 @@ aggregateDailyForecasts(forecasts) {
       if (bucket.passthrough) {
         return bucket.passthrough;
       }
-      return this.mergeDailyForecastEntries(bucket.entries, bucket.earliestDate);
+      return this.mergeDailyForecastEntries(bucket.entries);
     })
     .filter((entry) => !!entry);
 }
