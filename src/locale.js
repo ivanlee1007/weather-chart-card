@@ -1,4 +1,42 @@
+const zhTW = {
+  'tempHi': '溫度',
+  'tempLo': '低溫',
+  'precip': '降雨',
+  'feelsLike': '體感溫度',
+  'units': {
+    'km/h': 'km/h',
+    'm/s': 'm/s',
+    'mph': 'mph',
+    'Bft': '級',
+    'hPa': 'hPa',
+    'mmHg': 'mmHg',
+    'mm': 'mm',
+    'in': 'in'
+  },
+  'cardinalDirections': [
+    '北', '北北東', '東北', '東北東', '東', '東南東', '東南', '南南東',
+    '南', '南南西', '西南', '西南西', '西', '西北西', '西北', '北北西', '北'
+  ],
+  'clear-night': '晴朗夜晚',
+  'cloudy': '多雲',
+  'fog': '霧',
+  'hail': '冰雹',
+  'lightning': '雷電',
+  'lightning-rainy': '雷雨',
+  'partlycloudy': '晴時多雲',
+  'pouring': '大雨',
+  'rainy': '下雨',
+  'snowy': '下雪',
+  'snowy-rainy': '雨夾雪',
+  'sunny': '晴天',
+  'windy': '有風',
+  'windy-variant': '強風'
+};
+
 const locale = {
+  'zh-TW': zhTW,
+  'zh-Hant': zhTW,
+  'zh': zhTW,
   cs: {
     'tempHi': 'Teplota',
     'tempLo': 'Teplota v noci',
