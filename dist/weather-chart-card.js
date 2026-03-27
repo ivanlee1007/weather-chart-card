@@ -18473,6 +18473,10 @@ drawChart({ config, language, weather, forecastItems } = this) {
       yAxisID: 'TempAxis',
       borderColor: config.forecast.temperature2_color,
       backgroundColor: config.forecast.temperature2_color,
+      borderWidth: 2.5,
+      borderDash: [6, 4],
+      pointRadius: 3,
+      pointHoverRadius: 4,
     },
     {
       label: this.ll('precip'),
@@ -18485,7 +18489,15 @@ drawChart({ config, language, weather, forecastItems } = this) {
       categoryPercentage: 1.0,
       datalabels: {
         display: function (context) {
-          return context.dataset.data[context.dataIndex] > 0 ? 'true' : false;
+          const rainfall = context.dataset.data[context.dataIndex];
+          const probability = data.forecast[context.dataIndex].precipitation_probability;
+          if (rainfall > 0) {
+            return 'true';
+          }
+          if (config.forecast.precipitation_type === 'rainfall' && config.forecast.show_probability && probability !== undefined && probability !== null && probability > 0) {
+            return 'true';
+          }
+          return false;
         },
       formatter: function (value, context) {
         const precipitationType = config.forecast.precipitation_type;
