@@ -12,6 +12,7 @@ Compatibility fixes in this fork include:
 - daily forecast precipitation fallback: when a provider exposes probability but no daily rainfall amount, the card automatically shows precipitation probability instead of misleading all-zero rainfall bars
 - optional text sensor block: display a `sensor.*` entity's plain-text content inside the card (useful for forecast summaries or narrative weather text)
 - editor usability fix: text-sensor entity uses direct entity-id input instead of a giant dropdown menu
+- zh-TW wording tweak: `cloudy` now renders as `陰天` to better match common CWA narrative text in Traditional Chinese dashboards
 
 Goal: keep weather providers compliant with Home Assistant's weather model, while making the card tolerant of both legacy and current field names.
 
