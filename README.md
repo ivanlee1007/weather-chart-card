@@ -11,6 +11,7 @@ Compatibility fixes in this fork include:
 - daily forecast auto-merge when a provider exposes multiple periods for the same calendar day (for example day/night pairs), so the card shows one weekday bucket instead of duplicated labels
 - daily forecast precipitation fallback: when a provider exposes probability but no daily rainfall amount, the card automatically shows precipitation probability instead of misleading all-zero rainfall bars
 - optional text sensor block: display a `sensor.*` entity's plain-text content inside the card (useful for forecast summaries or narrative weather text)
+- editor usability fix: text-sensor entity uses direct entity-id input instead of a giant dropdown menu
 
 Goal: keep weather providers compliant with Home Assistant's weather model, while making the card tolerant of both legacy and current field names.
 

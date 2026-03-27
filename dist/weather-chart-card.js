@@ -1408,18 +1408,12 @@ class WeatherChartCardEditor extends s {
             </label>
           </div>
           <div class="textfield-container" style="${this._config.show_text_sensor ? 'display: flex;' : 'display: none;'}">
-            <ha-select
-              naturalMenuWidth
-              fixedMenuPosition
+            <ha-textfield
               label="Text sensor entity"
-              .configValue=${'text_sensor_entity'}
-              .value=${this._config.text_sensor_entity || ''}
-              @change=${(e) => this._valueChanged(e, 'text_sensor_entity')}
-              @closed=${(ev) => ev.stopPropagation()}
-            >
-              <ha-list-item .value=${''}>Select sensor</ha-list-item>
-              ${this.sensorEntities.map((entity) => x`<ha-list-item .value=${entity}>${entity}</ha-list-item>`)}
-            </ha-select>
+              placeholder="sensor.opencwa_xin_dian_qu_weather"
+              .value="${this._config.text_sensor_entity || ''}"
+              @change="${(e) => this._valueChanged(e, 'text_sensor_entity')}"
+            ></ha-textfield>
             <ha-textfield
               label="Text sensor title"
               .value="${this._config.text_sensor_title || ''}"
