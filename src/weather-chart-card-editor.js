@@ -263,29 +263,29 @@ class WeatherChartCardEditor extends LitElement {
           margin-left: 4px;
         }
 	div.buttons-container {
-          border-bottom: 2px solid #ccc;
-          padding-bottom: 10px;
-          margin-bottom: 20px;
           display: flex;
           gap: 8px;
+          flex-wrap: wrap;
+          margin-bottom: 20px;
         }
         div.buttons-container button {
-          background: transparent;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          padding: 6px 16px;
+          background: var(--mdc-theme-surface, #fff);
+          border: 1px solid var(--divider-color, #e0e0e0);
+          border-radius: 8px;
+          padding: 8px 16px;
           cursor: pointer;
           font-size: 14px;
-          color: var(--primary-text-color, #333);
-          transition: background 0.2s, border-color 0.2s;
+          font-weight: 500;
+          color: var(--secondary-text-color, #888);
+          transition: background 0.15s, color 0.15s;
         }
         div.buttons-container button:hover {
-          background: var(--secondary-background-color, #e0e0e0);
+          background: var(--secondary-background-color, #f5f5f5);
+          color: var(--primary-text-color, #333);
         }
         div.buttons-container button.active {
-          background: var(--primary-color, #03a9f4);
-          color: var(--text-primary-color, #fff);
-          border-color: var(--primary-color, #03a9f4);
+          background: var(--secondary-background-color, #e0e0e0);
+          color: var(--primary-text-color, #222);
         }
         .flex-container {
           display: flex;
@@ -373,10 +373,10 @@ class WeatherChartCardEditor extends LitElement {
         <!-- Buttons to switch between pages -->
        <h4>Settings:</h4>
        <div class="buttons-container">
-         <button @click="${() => this.showPage('card')}" class="${this.currentPage === 'card' ? 'active' : ''}">Main</button>
-         <button @click="${() => this.showPage('forecast')}" class="${this.currentPage === 'forecast' ? 'active' : ''}">Forecast</button>
-         <button @click="${() => this.showPage('units')}" class="${this.currentPage === 'units' ? 'active' : ''}">Units</button>
-         <button @click="${() => this.showPage('alternate')}" class="${this.currentPage === 'alternate' ? 'active' : ''}">Alternate entities</button>
+         <button @click=${() => this.showPage('card')} class="${this.currentPage === 'card' ? 'active' : ''}">Main</button>
+         <button @click=${() => this.showPage('forecast')} class="${this.currentPage === 'forecast' ? 'active' : ''}">Forecast</button>
+         <button @click=${() => this.showPage('units')} class="${this.currentPage === 'units' ? 'active' : ''}">Units</button>
+         <button @click=${() => this.showPage('alternate')} class="${this.currentPage === 'alternate' ? 'active' : ''}">Alternate entities</button>
        </div>
 
         <!-- Card Settings Page -->
