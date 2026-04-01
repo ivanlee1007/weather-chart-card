@@ -266,6 +266,26 @@ class WeatherChartCardEditor extends LitElement {
           border-bottom: 2px solid #ccc;
           padding-bottom: 10px;
           margin-bottom: 20px;
+          display: flex;
+          gap: 8px;
+        }
+        div.buttons-container button {
+          background: transparent;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          padding: 6px 16px;
+          cursor: pointer;
+          font-size: 14px;
+          color: var(--primary-text-color, #333);
+          transition: background 0.2s, border-color 0.2s;
+        }
+        div.buttons-container button:hover {
+          background: var(--secondary-background-color, #e0e0e0);
+        }
+        div.buttons-container button.active {
+          background: var(--primary-color, #03a9f4);
+          color: var(--text-primary-color, #fff);
+          border-color: var(--primary-color, #03a9f4);
         }
         .flex-container {
           display: flex;
@@ -353,10 +373,10 @@ class WeatherChartCardEditor extends LitElement {
         <!-- Buttons to switch between pages -->
        <h4>Settings:</h4>
        <div class="buttons-container">
-         <mwc-button @click="${() => this.showPage('card')}">Main</mwc-button>
-         <mwc-button @click="${() => this.showPage('forecast')}">Forecast</mwc-button>
-         <mwc-button @click="${() => this.showPage('units')}">Units</mwc-button>
-         <mwc-button @click="${() => this.showPage('alternate')}">Alternate entities</mwc-button>
+         <button @click="${() => this.showPage('card')}" class="${this.currentPage === 'card' ? 'active' : ''}">Main</button>
+         <button @click="${() => this.showPage('forecast')}" class="${this.currentPage === 'forecast' ? 'active' : ''}">Forecast</button>
+         <button @click="${() => this.showPage('units')}" class="${this.currentPage === 'units' ? 'active' : ''}">Units</button>
+         <button @click="${() => this.showPage('alternate')}" class="${this.currentPage === 'alternate' ? 'active' : ''}">Alternate entities</button>
        </div>
 
         <!-- Card Settings Page -->
