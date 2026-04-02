@@ -1330,16 +1330,16 @@ class WeatherChartCardEditor extends s {
       </style>
       <div>
       <div class="textfield-container">
-<ha-select
-  naturalMenuWidth
-  menuCorner="end"
-  label="Entity"
-  .configValue=${'entity'}
-  .value=${this._entity}
-  @selected=${(e) => this._EntityChanged(e, 'entity')}
->
-  ${this.entities.map((entity) => x`<ha-list-item .value=${entity}>${entity}</ha-list-item>`)}
-</ha-select>
+      <div>
+        <label>Entity</label>
+        <select
+          style="width: 100%; padding: 8px; margin: 10px 0; font-size: 14px; border: 1px solid var(--divider-color); border-radius: 4px; background: var(--card-background-color); color: var(--primary-text-color);"
+          .value=${this._entity || ''}
+          @change=${(e) => this._EntityChanged(e, 'entity')}
+        >
+          ${this.entities.map((entity) => x`<option value=${entity}>${entity}</option>`) }
+        </select>
+      </div>
       <ha-textfield
         label="Title"
         .value="${this._config.title || ''}"
