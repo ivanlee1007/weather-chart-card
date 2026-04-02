@@ -1164,9 +1164,29 @@ class WeatherChartCardEditor extends s {
           margin-left: 4px;
         }
 	div.buttons-container {
-          border-bottom: 2px solid #ccc;
-          padding-bottom: 10px;
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
           margin-bottom: 20px;
+        }
+        div.buttons-container button {
+          background: var(--mdc-theme-surface, #fff);
+          border: 1px solid var(--divider-color, #e0e0e0);
+          border-radius: 8px;
+          padding: 8px 16px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--secondary-text-color, #888);
+          transition: background 0.15s, color 0.15s;
+        }
+        div.buttons-container button:hover {
+          background: var(--secondary-background-color, #f5f5f5);
+          color: var(--primary-text-color, #333);
+        }
+        div.buttons-container button.active {
+          background: var(--secondary-background-color, #e0e0e0);
+          color: var(--primary-text-color, #222);
         }
         .flex-container {
           display: flex;
@@ -1182,12 +1202,11 @@ class WeatherChartCardEditor extends s {
       <div class="textfield-container">
 <ha-select
   naturalMenuWidth
-  fixedMenuPosition
+  menuCorner="end"
   label="Entity"
   .configValue=${'entity'}
   .value=${this._entity}
-  @change=${(e) => this._EntityChanged(e, 'entity')}
-  @closed=${(ev) => ev.stopPropagation()}
+  @selected=${(e) => this._EntityChanged(e, 'entity')}
 >
   ${this.entities.map((entity) => x`<ha-list-item .value=${entity}>${entity}</ha-list-item>`)}
 </ha-select>
@@ -1254,10 +1273,10 @@ class WeatherChartCardEditor extends s {
         <!-- Buttons to switch between pages -->
        <h4>Settings:</h4>
        <div class="buttons-container">
-         <mwc-button @click="${() => this.showPage('card')}">Main</mwc-button>
-         <mwc-button @click="${() => this.showPage('forecast')}">Forecast</mwc-button>
-         <mwc-button @click="${() => this.showPage('units')}">Units</mwc-button>
-         <mwc-button @click="${() => this.showPage('alternate')}">Alternate entities</mwc-button>
+         <button @click=${() => this.showPage('card')} class="${this.currentPage === 'card' ? 'active' : ''}">Main</button>
+         <button @click=${() => this.showPage('forecast')} class="${this.currentPage === 'forecast' ? 'active' : ''}">Forecast</button>
+         <button @click=${() => this.showPage('units')} class="${this.currentPage === 'units' ? 'active' : ''}">Units</button>
+         <button @click=${() => this.showPage('alternate')} class="${this.currentPage === 'alternate' ? 'active' : ''}">Alternate entities</button>
        </div>
 
         <!-- Card Settings Page -->
@@ -1552,12 +1571,11 @@ class WeatherChartCardEditor extends s {
         ></ha-textfield>
          <ha-select
            naturalMenuWidth
-           fixedMenuPosition
+           menuCorner="end"
            label="Select custom language"
            .configValue=${''}
            .value=${this._config.locale}
-           @change=${(e) => this._valueChanged(e, 'locale')}
-           @closed=${(ev) => ev.stopPropagation()}
+           @selected=${(e) => this._valueChanged(e, 'locale')}
          >
            <ha-list-item .value=${''}>HA Default</ha-list-item>
            <ha-list-item .value=${'bg'}>Bulgarian</ha-list-item>
@@ -1629,12 +1647,11 @@ class WeatherChartCardEditor extends s {
 	  <div class="textfield-container">
           <ha-select
             naturalMenuWidth
-            fixedMenuPosition
+            menuCorner="end"
             label="Precipitation Type (Probability if supported by the weather entity)"
             .configValue=${'forecast.precipitation_type'}
             .value=${forecastConfig.precipitation_type}
-            @change=${(e) => this._valueChanged(e, 'forecast.precipitation_type')}
-            @closed=${(ev) => ev.stopPropagation()}
+            @selected=${(e) => this._valueChanged(e, 'forecast.precipitation_type')}
           >
             <ha-list-item .value=${'rainfall'}>Rainfall</ha-list-item>
             <ha-list-item .value=${'probability'}>Probability</ha-list-item>
@@ -1688,12 +1705,11 @@ class WeatherChartCardEditor extends s {
           <div class="textfield-container">
             <ha-select
               naturalMenuWidth
-              fixedMenuPosition
+              menuCorner="end"
               label="Convert pressure to"
               .configValue=${'units.pressure'}
               .value=${unitsConfig.pressure}
-              @change=${(e) => this._valueChanged(e, 'units.pressure')}
-              @closed=${(ev) => ev.stopPropagation()}
+              @selected=${(e) => this._valueChanged(e, 'units.pressure')}
             >
               <ha-list-item .value=${'hPa'}>hPa</ha-list-item>
               <ha-list-item .value=${'mmHg'}>mmHg</ha-list-item>
@@ -1701,12 +1717,11 @@ class WeatherChartCardEditor extends s {
             </ha-select>
             <ha-select
               naturalMenuWidth
-              fixedMenuPosition
+              menuCorner="end"
               label="Convert wind speed to"
               .configValue=${'units.speed'}
               .value=${unitsConfig.speed}
-              @change=${(e) => this._valueChanged(e, 'units.speed')}
-              @closed=${(ev) => ev.stopPropagation()}
+              @selected=${(e) => this._valueChanged(e, 'units.speed')}
             >
               <ha-list-item .value=${'km/h'}>km/h</ha-list-item>
               <ha-list-item .value=${'m/s'}>m/s</ha-list-item>

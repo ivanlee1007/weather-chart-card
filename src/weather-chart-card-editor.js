@@ -301,12 +301,11 @@ class WeatherChartCardEditor extends LitElement {
       <div class="textfield-container">
 <ha-select
   naturalMenuWidth
-  fixedMenuPosition
+  menuCorner="end"
   label="Entity"
   .configValue=${'entity'}
   .value=${this._entity}
-  @change=${(e) => this._EntityChanged(e, 'entity')}
-  @closed=${(ev) => ev.stopPropagation()}
+  @selected=${(e) => this._EntityChanged(e, 'entity')}
 >
   ${this.entities.map((entity) => html`<ha-list-item .value=${entity}>${entity}</ha-list-item>`)}
 </ha-select>
@@ -671,12 +670,11 @@ class WeatherChartCardEditor extends LitElement {
         ></ha-textfield>
          <ha-select
            naturalMenuWidth
-           fixedMenuPosition
+           menuCorner="end"
            label="Select custom language"
            .configValue=${''}
            .value=${this._config.locale}
-           @change=${(e) => this._valueChanged(e, 'locale')}
-           @closed=${(ev) => ev.stopPropagation()}
+           @selected=${(e) => this._valueChanged(e, 'locale')}
          >
            <ha-list-item .value=${''}>HA Default</ha-list-item>
            <ha-list-item .value=${'bg'}>Bulgarian</ha-list-item>
@@ -748,12 +746,11 @@ class WeatherChartCardEditor extends LitElement {
 	  <div class="textfield-container">
           <ha-select
             naturalMenuWidth
-            fixedMenuPosition
+            menuCorner="end"
             label="Precipitation Type (Probability if supported by the weather entity)"
             .configValue=${'forecast.precipitation_type'}
             .value=${forecastConfig.precipitation_type}
-            @change=${(e) => this._valueChanged(e, 'forecast.precipitation_type')}
-            @closed=${(ev) => ev.stopPropagation()}
+            @selected=${(e) => this._valueChanged(e, 'forecast.precipitation_type')}
           >
             <ha-list-item .value=${'rainfall'}>Rainfall</ha-list-item>
             <ha-list-item .value=${'probability'}>Probability</ha-list-item>
@@ -807,12 +804,11 @@ class WeatherChartCardEditor extends LitElement {
           <div class="textfield-container">
             <ha-select
               naturalMenuWidth
-              fixedMenuPosition
+              menuCorner="end"
               label="Convert pressure to"
               .configValue=${'units.pressure'}
               .value=${unitsConfig.pressure}
-              @change=${(e) => this._valueChanged(e, 'units.pressure')}
-              @closed=${(ev) => ev.stopPropagation()}
+              @selected=${(e) => this._valueChanged(e, 'units.pressure')}
             >
               <ha-list-item .value=${'hPa'}>hPa</ha-list-item>
               <ha-list-item .value=${'mmHg'}>mmHg</ha-list-item>
@@ -820,12 +816,11 @@ class WeatherChartCardEditor extends LitElement {
             </ha-select>
             <ha-select
               naturalMenuWidth
-              fixedMenuPosition
+              menuCorner="end"
               label="Convert wind speed to"
               .configValue=${'units.speed'}
               .value=${unitsConfig.speed}
-              @change=${(e) => this._valueChanged(e, 'units.speed')}
-              @closed=${(ev) => ev.stopPropagation()}
+              @selected=${(e) => this._valueChanged(e, 'units.speed')}
             >
               <ha-list-item .value=${'km/h'}>km/h</ha-list-item>
               <ha-list-item .value=${'m/s'}>m/s</ha-list-item>
