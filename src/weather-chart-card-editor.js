@@ -21,6 +21,8 @@ const ALT_SCHEMA = [
 const TEXT_SENSOR_SCHEMA = [
   { name: "text_sensor_entity", title: "Text sensor entity", selector: { entity: { domain: 'sensor' } } },
   { name: "text_sensor_title", title: "Text sensor title", selector: { text: {} } },
+  { name: "text_sensor_title_size", title: "Text sensor title font size", selector: { number: { min: 10, max: 48, step: 1, mode: 'box', unit_of_measurement: 'px' } } },
+  { name: "text_sensor_content_size", title: "Text sensor content font size", selector: { number: { min: 10, max: 48, step: 1, mode: 'box', unit_of_measurement: 'px' } } },
 ];
 
 class WeatherChartCardEditor extends LitElement {
@@ -709,6 +711,8 @@ class WeatherChartCardEditor extends LitElement {
           .data=${{
             text_sensor_entity: this._config.text_sensor_entity || '',
             text_sensor_title: this._config.text_sensor_title || '',
+            text_sensor_title_size: Number(this._config.text_sensor_title_size || 14),
+            text_sensor_content_size: Number(this._config.text_sensor_content_size || 13),
           }}
           .schema=${TEXT_SENSOR_SCHEMA}
           .hass=${this.hass}

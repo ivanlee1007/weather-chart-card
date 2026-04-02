@@ -49,6 +49,8 @@ static getStubConfig(hass, unusedEntities, allEntities) {
     show_text_sensor: false,
     text_sensor_entity: '',
     text_sensor_title: '',
+    text_sensor_title_size: 14,
+    text_sensor_content_size: 13,
     show_forecast_toggle: false,
     use_12hour_format: false,
     icons_size: 30,
@@ -112,6 +114,8 @@ setConfig(config) {
     show_text_sensor: false,
     text_sensor_entity: '',
     text_sensor_title: '',
+    text_sensor_title_size: 14,
+    text_sensor_content_size: 13,
     show_forecast_toggle: false,
     ...config,
     forecast: {
@@ -1674,11 +1678,13 @@ renderTextSensor({ config } = this) {
   }
 
   const title = config.text_sensor_title || textSensor.attributes.friendly_name || this.config.text_sensor_entity;
+  const titleSize = Number(config.text_sensor_title_size || 14);
+  const contentSize = Number(config.text_sensor_content_size || 13);
 
   return html`
     <div class="text-sensor-section" @click="${() => this.showMoreInfo(this.config.text_sensor_entity)}">
-      <div class="text-sensor-title">${title}</div>
-      <div class="text-sensor-content">${sensorState}</div>
+      <div class="text-sensor-title" style="font-size: ${titleSize}px;">${title}</div>
+      <div class="text-sensor-content" style="font-size: ${contentSize}px;">${sensorState}</div>
     </div>
   `;
 }
