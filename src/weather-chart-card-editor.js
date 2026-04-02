@@ -106,12 +106,8 @@ class WeatherChartCardEditor extends LitElement {
       return event.detail.value;
     }
 
-    if (event.currentTarget && event.currentTarget.value !== undefined) {
-      return event.currentTarget.value;
-    }
-
-    if (event.target && event.target.value !== undefined) {
-      return event.target.value;
+    if (event.detail && event.detail.item && event.detail.item.value !== undefined) {
+      return event.detail.item.value;
     }
 
     if (event.detail && event.detail.index !== undefined && event.currentTarget) {
@@ -128,6 +124,14 @@ class WeatherChartCardEditor extends LitElement {
           return node.value;
         }
       }
+    }
+
+    if (event.currentTarget && event.currentTarget.value !== undefined) {
+      return event.currentTarget.value;
+    }
+
+    if (event.target && event.target.value !== undefined) {
+      return event.target.value;
     }
 
     return undefined;
