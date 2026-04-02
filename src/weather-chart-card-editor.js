@@ -975,9 +975,6 @@ class WeatherChartCardEditor extends LitElement {
     `;
   }
 }
-if (!customElements.get('weather-chart-card-ha-editor')) {
-  customElements.define('weather-chart-card-ha-editor', WeatherChartCardEditor);
-}
 if (!customElements.get('weather-chart-card-editor')) {
   customElements.define('weather-chart-card-editor', WeatherChartCardEditor);
 }

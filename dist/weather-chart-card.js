@@ -1962,9 +1962,6 @@ class WeatherChartCardEditor extends s {
     `;
   }
 }
-if (!customElements.get('weather-chart-card-ha-editor')) {
-  customElements.define('weather-chart-card-ha-editor', WeatherChartCardEditor);
-}
 if (!customElements.get('weather-chart-card-editor')) {
   customElements.define('weather-chart-card-editor', WeatherChartCardEditor);
 }
@@ -20415,25 +20412,15 @@ renderLastUpdated() {
 // Regex to detect Latin script characters for uppercase formatting (ES2019 compatible)
 WeatherChartCard.LATIN_SCRIPT_REGEX = /^[A-Za-z]+$/;
 
-if (!customElements.get('weather-chart-card-ha')) {
-  customElements.define('weather-chart-card-ha', WeatherChartCard);
-}
 if (!customElements.get('weather-chart-card')) {
   customElements.define('weather-chart-card', WeatherChartCard);
 }
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "weather-chart-card-ha",
+  type: "weather-chart-card",
   name: "Enhanced Weather Chart Card",
   description: "Enhanced custom weather card with charts.",
-  preview: true,
-  documentationURL: "https://github.com/ivanlee1007/weather-chart-card",
-});
-window.customCards.push({
-  type: "weather-chart-card",
-  name: "Weather Chart Card",
-  description: "Compatibility alias for Enhanced Weather Chart Card.",
   preview: true,
   documentationURL: "https://github.com/ivanlee1007/weather-chart-card",
 });
