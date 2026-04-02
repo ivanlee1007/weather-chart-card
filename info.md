@@ -1,46 +1,34 @@
-# Weather Chart Card
+# UNiNUS Weather Chart Card
 
-An enhanced weather forecast card for Home Assistant with advanced features and customization options.
+A Home Assistant weather forecast card with enhanced visualization, HA-native editor selectors, and practical customization features.
 
-## ✨ Features
+## Features
 
-- 🌡️ **Temperature Gradient Colors** - Visual temperature ranges with automatic color coding (blue→green→yellow→orange→red)
-- 📅 **Date Labels** - Day names with date numbers for easy reference
-- 🌤️ **Large Animated Weather Icons** - Beautiful Basmilius weather icons with customizable sizes
-- 🌙 **Day/Night Temperature Distinction** - Dashed lines clearly differentiate night temperatures from day temperatures
-- 🌍 **Timezone Support** - Display weather for multiple locations with proper timezone handling
-- 🌡️ **Smart Unit Conversion** - Automatic temperature (°F ↔ °C), pressure (inHg ↔ mmHg ↔ hPa), and speed conversion
-- 🎨 **Highly Customizable** - Adjust icon sizes, colors, chart styles, and layouts to match your theme
-- ⚡ **Fast & Lightweight** - Optimized performance with efficient rendering
-- 📊 **Multiple Display Styles** - Choose between different label and chart presentation styles
+- Daily / hourly forecast toggle
+- Temperature gradient colors with day/night distinction
+- Date labels in daily forecast mode
+- Timezone-aware display for multi-location setups
+- Unit conversion for temperature, pressure, and wind speed
+- Text sensor section with configurable title/content font sizes
+- GUI editor powered by Home Assistant-native `ha-form` selectors
 
-Perfect for dual-location weather monitoring or detailed single-location forecasts!
-
-## 🚀 Quick Start
+## Quick start
 
 ```yaml
-type: custom:weather-chart-card-ha
+type: custom:weather-chart-card
 entity: weather.your_weather_entity
-location_name: "Home"
-timezone: "America/Los_Angeles"
 forecast:
   show_date_labels: true
-  condition_icon_size_multiplier: 2.0
   use_color_thresholds: true
 ```
 
-## 📖 Documentation
+## Notes
 
-For complete configuration options, examples, and troubleshooting, see the [full README](https://github.com/ivanlee1007/weather-chart-card).
+- HACS display name: **UNiNUS Weather Chart Card**
+- Canonical card type: `custom:weather-chart-card`
+- Full documentation: <https://github.com/ivanlee1007/weather-chart-card>
 
-This fork consolidates the original project, the enhanced HA fork, and additional UNiNUS compatibility fixes in one repository.
-
-## 🙏 Credits
+## Credits
 
 - Original card by [mlamberts78](https://github.com/mlamberts78/weather-chart-card)
 - Weather icons by [Basmilius](https://github.com/basmilius/weather-icons)
-- Enhanced by [W4MHI](https://github.com/w4mhi)
-
-## 📄 License
-
-MIT License - Free to use and modify

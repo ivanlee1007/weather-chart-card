@@ -1,161 +1,59 @@
-# Deployment Instructions for HACS
+# Deployment Notes
 
-Follow these steps to deploy your Weather Chart Card to HACS.
+This repository is published to HACS as **UNiNUS Weather Chart Card**.
 
-## Step 1: Add Required Files to Repository
+## Canonical identifiers
 
-Copy these files to your repository root:
+- Repository: `ivanlee1007/weather-chart-card`
+- HACS name: `UNiNUS Weather Chart Card`
+- Canonical Lovelace type: `custom:weather-chart-card`
+- Published frontend filename: `weather-chart-card.js`
 
-```
-weather-chart-card-ha/
-├── .github/
-│   └── workflows/
-│       ├── release.yml          # ✅ Created
-│       └── validate.yml         # ✅ Created
-├── hacs.json                    # ✅ Created
-├── info.md                      # ✅ Created
-├── LICENSE                      # ✅ Created
-└── README.md                    # ✅ Updated
-```
-
-## Step 2: Commit and Push Files
+## Release workflow
 
 ```bash
-# Navigate to your repository
-cd /path/to/weather-chart-card-ha
-
-# Copy the new files from Claude's workspace
-cp /home/claude/hacs.json .
-cp /home/claude/info.md .
-cp /home/claude/LICENSE .
-cp /home/claude/README.md .
-cp -r /home/claude/.github .
-
-# Stage all changes
+cd /path/to/weather-chart-card
+npm install
+npm run build
 git add .
-
-# Commit
-git commit -m "Prepare for HACS publication
-
-- Add hacs.json configuration
-- Add info.md for HACS store
-- Add MIT LICENSE
-- Update README.md with comprehensive documentation
-- Add GitHub Actions workflows for releases and validation"
-
-# Push to GitHub
-git push origin main
+git commit -m "Describe the change"
+git push origin master
 ```
 
-## Step 3: Create Your First Release
+Then create a tag and GitHub release:
 
 ```bash
-# Make sure everything is committed and pushed
-git status
-
-# Create version tag
-git tag -a v1.0.0 -m "Release v1.0.0 - Initial HACS publication
-
-Features:
-- Temperature gradient colors
-- Date labels with day names
-- Large animated weather icons
-- Day/night temperature distinction (dashed lines)
-- Timezone support for multiple locations
-- Unit conversion (°F/°C, inHg/mmHg/hPa)
-- Customizable icon sizes and layouts"
-
-# Push the tag
-git push origin v1.0.0
+git tag -a vX.Y.Z -m "vX.Y.Z"
+git push origin vX.Y.Z
 ```
 
-The GitHub Action will automatically:
-1. Build your card
-2. Create a GitHub Release
-3. Attach `weather-chart-card-ha.js` to the release
+Attach these build artifacts to the release when needed:
 
-## Step 4: Verify Release
+- `dist/weather-chart-card.js`
+- `dist/weather-chart-card-ha.js`
 
-1. Go to: https://github.com/ivanlee1007/weather-chart-card/releases
-2. Verify release v1.0.0 exists
-3. Verify `weather-chart-card-ha.js` is attached to the release
-4. Download and test the file locally
+## HACS expectations
 
-## Step 5: Submit to HACS
+`hacs.json` currently points to:
 
-1. Go to: https://github.com/hacs/default/issues/new/choose
-2. Click **"Add to default"**
-3. Fill in the template:
+- `filename: weather-chart-card.js`
 
-```
-Repository: https://github.com/ivanlee1007/weather-chart-card
-Category: plugin
-Description: Enhanced weather chart card with temperature gradients, timezone support, and customizable layouts
-```
+So if you change build output names, update `hacs.json` and README together.
 
-4. Submit the issue
-5. Wait for HACS team review (usually 1-7 days)
+## Before calling a release done
 
-## Step 6: Respond to Review
+- version bumped in `package.json`
+- `npm run build` passed
+- repo contains updated docs for user-visible changes
+- runtime bundle on the target HA instance matches the release
+- hard-refresh browser test passed
+- GUI editor changes were verified in a fresh browser context
 
-The HACS team may request changes. Common requests:
-- Fix typos in documentation
-- Add missing screenshots
-- Clarify installation instructions
-- Update configuration examples
+## Recent documentation corrections
 
-Respond promptly and make requested changes.
+These docs now intentionally reflect the current fork behavior:
 
-## Step 7: Celebrate! 🎉
-
-Once approved, your card will be available in HACS for all Home Assistant users!
-
-## Future Updates
-
-When you release new versions:
-
-```bash
-# Make your changes
-git add .
-git commit -m "Add new feature X"
-git push
-
-# Create new version tag
-git tag -a v1.1.0 -m "Release v1.1.0 - Add feature X"
-git push origin v1.1.0
-```
-
-The GitHub Action will automatically create the release.
-
-## Troubleshooting
-
-### Build Fails
-
-Check `package.json` has correct build script:
-```json
-{
-  "scripts": {
-    "build": "rollup -c"
-  }
-}
-```
-
-### Release Not Created
-
-1. Check GitHub Actions tab for errors
-2. Verify `GITHUB_TOKEN` has write permissions
-3. Check tag format is `v*.*.*` (e.g., v1.0.0)
-
-### HACS Rejection
-
-Common reasons:
-- Missing required files
-- No releases with JS file attached
-- Invalid hacs.json format
-- Repository not public
-
-Fix issues and resubmit!
-
----
-
-**Need help?** Open an issue on GitHub or ask in the Home Assistant community forums.
+- card picker name is **UNiNUS Weather Chart Card**
+- canonical type is `custom:weather-chart-card`
+- GUI editor uses HA-native `ha-form` selectors
+- text sensor title/content font sizes are configurable
