@@ -1,18 +1,28 @@
 {
   "name": "weather-chart-card",
-  "version": "1.0.14",
-  "description": "Weather card with charts for Home Assistant Lovelace UI",
+  "version": "1.5.3",
+  "description": "Enhanced weather chart card with temperature gradients, timezone support, and customizable layouts for Home Assistant",
   "keywords": [
     "home-assistant",
     "homeassistant",
     "hass",
     "automation",
     "lovelace",
-    "custom-cards"
+    "custom-cards",
+    "weather",
+    "chart",
+    "forecast"
   ],
   "module": "src/main.js",
-  "repository": "git@github.com:mlamberts78/weather-chart-card.git",
-  "author": "Marc Lamberts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivanlee1007/weather-chart-card.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ivanlee1007/weather-chart-card/issues"
+  },
+  "homepage": "https://github.com/ivanlee1007/weather-chart-card#readme",
+  "author": "Marc Lamberts, enhanced by Mihai, maintained by UNiNUS",
   "license": "MIT",
   "dependencies": {
     "chart.js": "^4.4.1",

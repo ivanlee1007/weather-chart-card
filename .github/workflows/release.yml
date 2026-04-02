@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Diagnostic - Check environment
+        run: |
+          echo "=== Current directory ==="
+          pwd
+          echo ""
+          echo "=== Files in current directory ==="
+          ls -la
+          echo ""
+          echo "=== Checking for package-lock.json ==="
+          ls -la package-lock.json || echo "⚠️ package-lock.json NOT FOUND"
+          echo ""
+          echo "=== Checking for package.json ==="
+          ls -la package.json || echo "⚠️ package.json NOT FOUND"
+          echo ""
+          echo "=== Git status ==="
+          git log -1 --oneline
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Verify build output
+        run: |
+          if [ ! -f "dist/weather-chart-card-ha.js" ]; then
+            echo "Error: Build output not found!"
+            exit 1
+          fi
+          echo "Build successful! File size: $(wc -c < dist/weather-chart-card-ha.js) bytes"
+          echo ""
+          echo "=== Dist folder contents ==="
+          ls -lR dist/
+      
+      - name: Package release files
+        run: |
+          cd dist
+          zip -r ../weather-chart-card-ha.zip weather-chart-card-ha.js icons/ icons2/
+          cd ..
+          echo "Package created: weather-chart-card-ha.zip"
+          unzip -l weather-chart-card-ha.zip
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            weather-chart-card-ha.zip
+            dist/weather-chart-card-ha.js
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

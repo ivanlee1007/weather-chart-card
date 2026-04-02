@@ -1,50 +1,135 @@
-<h1 align="center">Weather Chart Card</h1>
+<h1 align="center">Enhanced Weather Chart Card</h1>
 
-# Maintained fork for HA weather-spec compatibility
-This fork is maintained to improve compatibility with modern Home Assistant weather entities that expose native attribute names.
+<div align="center">
 
-Compatibility fixes in this fork include:
-- `pressure` fallback to `native_pressure`
-- `templow` fallback to `native_temp_low` / `native_templow`
-- `precipitation` fallback to `native_precipitation`
-- `apparent_temperature` fallback to `native_apparent_temperature`
-- daily forecast auto-merge when a provider exposes multiple periods for the same calendar day (for example day/night pairs), so the card shows one weekday bucket instead of duplicated labels
-- daily forecast precipitation fallback: when a provider exposes probability but no daily rainfall amount, the card automatically shows precipitation probability instead of misleading all-zero rainfall bars
-- optional text sensor block: display a `sensor.*` entity's plain-text content inside the card (useful for forecast summaries or narrative weather text)
-- editor usability fix: text-sensor entity uses direct entity-id input instead of a giant dropdown menu
-- zh-TW wording tweak: `cloudy` now renders as `陰天` to better match common CWA narrative text in Traditional Chinese dashboards
+[![HACS](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
+[![GitHub Release](https://img.shields.io/github/v/release/ivanlee1007/weather-chart-card.svg)](https://github.com/ivanlee1007/weather-chart-card/releases)
+![GitHub downloads](https://img.shields.io/github/downloads/ivanlee1007/weather-chart-card/total?style=flat-square)
+[![License](https://img.shields.io/github/license/ivanlee1007/weather-chart-card.svg)](LICENSE)
 
-Goal: keep weather providers compliant with Home Assistant's weather model, while making the card tolerant of both legacy and current field names.
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=https%3A%2F%2Fgithub.com%2Fivanlee1007%2Fweather-chart-card&owner=ivanlee1007)
 
-[![Buy me a coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/mlamberts7I)
-[![PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.com/donate/?hosted_button_id=HZUUW64FRM2J2)
+</div>
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/mlamberts78/weather-chart-card?style=flat-square)](https://github.com/mlamberts78/weather-chart-card/releases/latest)
-![GitHub downloads](https://img.shields.io/github/downloads/mlamberts78/weather-chart-card/total?style=flat-square)
-![GitHub release (latest by SemVer including pre-releases)](https://img.shields.io/github/downloads/mlamberts78/weather-chart-card/latest/total)
-[![HACS Validate](https://github.com/mlamberts78/weather-chart-card/actions/workflows/validate.yaml/badge.svg)](https://github.com/mlamberts78/weather-chart-card/actions/workflows/validate.yaml)
+<div align="center">
+  <img src="https://raw.githubusercontent.com/ivanlee1007/weather-chart-card/master/screenshots/weather-en.png" width="30%" alt="English locale">
+  <img src="https://raw.githubusercontent.com/ivanlee1007/weather-chart-card/master/screenshots/weather-ro.png" width="30%" alt="Romanian locale">
+  <img src="https://raw.githubusercontent.com/ivanlee1007/weather-chart-card/master/screenshots/weather-hourly.png" width="30%" alt="Hourly view">
+</div>
 
-![weather-chart-card](https://github.com/mlamberts78/weather-chart-card/assets/93537082/bd5b9f6e-4125-4a19-9773-463e6d054bce)
-![15-days](https://github.com/mlamberts78/weather-chart-card/assets/93537082/f4de6060-7005-4a6d-b1f3-3aa17c856c73)
+## About This Fork
 
-## Installation
+This is an actively maintained fork of the [original weather-chart-card project by mlamberts78](https://github.com/mlamberts78/weather-chart-card). We've added significant improvements including:
 
-### HACS
+- � **Daily/Hourly Toggle** - Runtime button to switch between forecast types
+- 🌡️ **Enhanced Temperature Gradients** - 6-level comfort-based color spectrum
+- 🌙 **Improved Day/Night Distinction** - Dashed lines for night temperatures  
+- 📅 **Date Labels** - Show date numbers below day names
+- 🌍 **Advanced Timezone Support** - Multi-location weather monitoring
+- 🔄 **Smart Unit Conversion** - Automatic °F ↔ °C, inHg ↔ mmHg ↔ hPa
+- 🎨 **Customizable Layouts** - Large weather icons, flexible positioning
+- ⚡ **Development Tools** - Local test server for easy development
 
-This card is available in HACS (Home Assistant Community Store).
-HACS is a third party community store and is not included in Home Assistant out of the box.
+This version continues to receive updates and bug fixes to ensure compatibility with the latest Home Assistant releases.
 
-This fork is intended for setups where the weather provider already follows Home Assistant's weather entity contract, but the card still needs to understand newer/native attribute names.
+---
 
-#### Configuration variables:
+## ✨ Recent Updates
 
-##### Card options
+### New Features
+
+- **Daily/Hourly Toggle**: Runtime toggle button to switch between daily and hourly forecasts
+  - Optional button that appears in the top-right corner (disabled by default)
+  - Seamlessly switches between forecast types without editing configuration
+  - Automatically checks entity support for the requested forecast type
+- **Temperature Gradient Colors**: Automatic color-coded temperature lines based on comfort levels (6-level spectrum)
+  - High/day temperature line displays with gradient colors from cold (blue) to hot (red)
+  - Low/night temperature line displays as a dashed line in solid color for easy distinction
+- **Date Labels**: Display date numbers below weekday labels in daily forecast view
+- **Enhanced Visual Design**: 
+  - Gradient colors based on actual temperature comfort: < 5°C (Cold/Dark Blue), 5-15°C (Cool/Light Blue), 15-22°C (Comfortable/Green), 22-26°C (Pleasant/Yellow), 26-32°C (Hot/Orange), > 32°C (Very Hot/Red)
+  - Dashed border for night temperature line for better visual distinction
+  - Solid border for day temperature line with gradient colors
+  - Customizable icon sizes with multiplier support (0.5x - 4x)
+  - Large centered main weather icon option
+- **Timezone Support**: Display weather for multiple locations with proper timezone handling
+- **Development Tools**: Local test server for easier development without Home Assistant installation
+
+---
+
+## 📦 Installation
+
+### HACS (Recommended)
+
+1. Open **HACS** in Home Assistant
+2. Go to **Frontend** section
+3. Click **"+ Explore & Download Repositories"**
+4. Search for **"Weather Chart Card"**
+5. Click **"Download"**
+6. Restart Home Assistant
+7. Clear browser cache (Ctrl+Shift+R / Cmd+Shift+R)
+
+### Manual Installation
+
+1. Download `weather-chart-card.js` (or `weather-chart-card-ha.js` if you want the legacy filename) from the [latest release](https://github.com/ivanlee1007/weather-chart-card/releases/latest)
+2. Copy the file to your `config/www` folder
+3. Add the resource in **Settings** → **Dashboards** → **Resources**:
+   ```
+   URL: /local/weather-chart-card.js
+   Type: JavaScript Module
+   ```
+4. Restart Home Assistant
+5. Clear browser cache
+
+---
+
+## 🚀 Quick Start
+
+### Basic Configuration
+
+```yaml
+type: custom:weather-chart-card-ha
+entity: weather.home
+```
+
+### Recommended Configuration
+
+```yaml
+type: custom:weather-chart-card-ha
+entity: weather.home
+location_name: "Home"
+timezone: "America/Los_Angeles"
+show_time: true
+show_day: true
+show_date: true
+animated_icons: true
+icon_style: style1
+icons_size: 20
+forecast:
+  show_date_labels: true
+  condition_icon_size_multiplier: 2.0
+  use_color_thresholds: true
+  chart_height: 180
+  labels_font_size: 11
+  style: style1
+units:
+  temperature: "°F"
+  pressure: "inHg"
+  speed: "mph"
+```
+
+---
+
+## ⚙️ Configuration Options
+
+### Card Options
 
 | Name                  | Type    | Default                  | Description                                                                                        |
 | ----------------------| ------- | -------------------------|--------------------------------------------------------------------------------------------------- |
-| type                  | string  | **Required**             | Should be `custom:weather-chart-card`.                                                             |
+| type                  | string  | **Required**             | Should be `custom:weather-chart-card-ha` or the compatibility alias `custom:weather-chart-card`.                                                             |
 | entity                | string  | **Required**             | An entity_id with the `weather` domain.                                                            |
+| location_name         | string  | none                     | Display name for the location.                                                                     |
+| timezone              | string  | none                     | Set a specific timezone (e.g., 'America/New_York'). Defaults to system timezone if not specified.  |
 | temp                  | string  | none                     | An entity_id for a custom temperature sensor.                                                      |
 | press                 | string  | none                     | An entity_id for a custom pressure sensor.                                                         |
 | humid                 | string  | none                     | An entity_id for a custom humidity sensor.                                                         |
@@ -76,92 +161,92 @@ This fork is intended for setups where the weather provider already follows Home
 | show_visibility       | boolean | false                    | Show or hide visibility on the card.                                                               |
 | show_description      | boolean | false                    | Show or hide the weather description on the card.                                                  |
 | show_last_changed     | boolean | false                    | Show or hide when last data changed on the card.                                                   |
+| show_forecast_toggle  | boolean | false                    | Show or hide the Daily/Hourly toggle button in the top-right corner.                               |
 | use_12hour_format     | boolean | false                    | Display time in 12-hour format (AM/PM) instead of 24-hour format.                                  |
 | icons                 | string  | none                     | Path to the location of custom icons in svg format, for example `/local/weather-icons/`.           |
 | animated_icons        | boolean | false                    | Enable the use of animated icons                                                                   |
-| icon_style            | string  | 'style1'                 | Options are 'style1' and'style2' for different set of animated icons.                              |
+| icon_style            | string  | 'style1'                 | Options are 'style1' and 'style2' for different set of animated icons.                             |
 | icons_size            | number  | 25                       | The size of the animated or custom icons in pixels.                                                |
+| main_icon_size        | number  | 90                       | Size of main current weather icon in pixels.                                                       |
 | current_temp_size     | number  | 28                       | The size of the current temperature in pixels.                                                     |
 | time_size             | number  | 26                       | The size of the current time in pixels.                                                            |
 | day_date_size         | number  | 15                       | The size of the current day and date in pixels.                                                    |
 | forecast              | object  | none                     | See [forecast options](#forecast-options) for available options.                                   |
 | units                 | object  | none                     | See [units of measurement](#units-of-measurement) for available options.                           |
-| locale                | string  | none                     | See [Supported languages](#Supported-languages) for available languages                            |
+| locale                | string  | none                     | See [Supported languages](#supported-languages) for available languages                            |
 | autoscroll            | boolean | false                    | Update the chart each hour, hiding prior forecast datapoints                                       |
 
-##### Forecast options
+### Forecast Options
 
-| Name                 | Type    | Default                  | Description                                                                                        |
-| -------------------- | ------- | -------------------------|--------------------------------------------------------------------------------------------------- |
-| precipitation_type   | string  | rainfall                 | Show precipitation in 'rainfall' or 'probability'.                                                 |
-| show_probability     | boolean | false                    | Also show probability value when precipitation_type = rainfall. (Only when available)              |
-| labels_font_size     | number  | 11                       | Font size for temperature and precipitation labels.                                                |
-| precip_bar_size      | number  | 100                      | Adjusts the thickness of precipitation bars (1-100).                                               |
-| temperature1_color   | string  | rgba(255, 152, 0, 1.0)   | Temperature first line chart color.                                                                |
-| temperature2_color   | string  | rgba(68, 115, 158, 1.0)  | Temperature second line chart color.                                                               |
-| precipitation_color  | string  | rgba(132, 209, 253, 1.0) | Precipitation bar chart color.                                                                     |
-| chart_datetime_color | string  | primary-text-color       | Chart day or hour color                                                                            |
-| chart_text_color     | string  | none                     | Chart text color                                                                                   |
-| chart_height         | number  | 180                      | Adjust the forecast chart height                                                                   |
-| condition_icons      | boolean | true                     | Show or hide forecast condition icons.                                                             |
-| show_wind_forecast   | boolean | true                     | Show or hide wind forecast on the card.                                                            |
-| round_temp           | boolean | false                    | Option for rounding the forecast temperatures                                                      |
-| style                | string  | style1                   | Change chart style, options: 'style1' or 'style2'                                                  |
-| type                 | string  | daily                    | Show daily or hourly forecast if available, options: 'daily' or 'hourly'                           |
-| number_of_forecasts  | number  | 0                        | Overrides the number of forecasts to display. Set to "0" for automatic mode.                       |
-| disable_animation    | boolean | false                    | Disable the chart animation.                                                                       |
+| Name                           | Type    | Default                  | Description                                                                                        |
+| ------------------------------ | ------- | -------------------------|--------------------------------------------------------------------------------------------------- |
+| precipitation_type             | string  | rainfall                 | Show precipitation in 'rainfall' or 'probability'.                                                 |
+| show_probability               | boolean | false                    | Also show probability value when precipitation_type = rainfall. (Only when available)              |
+| labels_font_size               | number  | 11                       | Font size for temperature and precipitation labels.                                                |
+| precip_bar_size                | number  | 100                      | Adjusts the thickness of precipitation bars (1-100).                                               |
+| temperature1_color             | string  | rgba(255, 152, 0, 1.0)   | High/day temperature line color (used when use_color_thresholds is false).                         |
+| temperature2_color             | string  | rgba(68, 115, 158, 1.0)  | Low/night temperature line color.                                                                  |
+| precipitation_color            | string  | rgba(132, 209, 253, 1.0) | Precipitation bar chart color.                                                                     |
+| use_color_thresholds           | boolean | true                     | Enable automatic temperature-based gradient colors for high temperature line (6 comfort levels).   |
+| chart_datetime_color           | string  | primary-text-color       | Chart day or hour color                                                                            |
+| chart_text_color               | string  | none                     | Chart text color                                                                                   |
+| chart_height                   | number  | 180                      | Adjust the forecast chart height                                                                   |
+| condition_icons                | boolean | true                     | Show or hide forecast condition icons.                                                             |
+| condition_icon_size_multiplier | number  | 2.0                      | Multiplier for condition icon size relative to icons_size (0.5-4.0).                               |
+| show_wind_forecast             | boolean | true                     | Show or hide wind forecast on the card.                                                            |
+| round_temp                     | boolean | false                    | Option for rounding the forecast temperatures                                                      |
+| style                          | string  | style1                   | Change chart style, options: 'style1' or 'style2'                                                  |
+| type                           | string  | daily                    | Show daily or hourly forecast if available, options: 'daily' or 'hourly'                           |
+| number_of_forecasts            | number  | 0                        | Overrides the number of forecasts to display. Set to "0" for automatic mode.                       |
+| disable_animation              | boolean | false                    | Disable the chart animation.                                                                       |
+| show_date_labels               | boolean | true                     | Show date numbers below weekday labels in daily forecast view.                                     |
 
-##### Units of measurement
+### Units of Measurement
 
 | Name                 | Type    | Default                  | Description                                                                                        |
 | -------------------- | ------- | -------------------------|--------------------------------------------------------------------------------------------------- |
 | pressure             | string  | none                     | Convert to 'hPa' or 'mmHg' or 'inHg'                                                               |
 | speed                | string  | none                     | Convert to 'km/h' or 'm/s' or 'Bft' or 'mph'                                                       |
+| temperature          | string  | none                     | Convert to '°C' or '°F'. Applies to current temp, feels like, and forecast temperatures.           |
 
-### Fork compatibility notes
 
-This fork adds compatibility for providers that expose Home Assistant native weather attribute names instead of older legacy names.
+## 📸 Example Configurations
 
-Supported fallback mappings:
-
-| Legacy card field | Native HA field(s) accepted by this fork |
-| ----------------- | ---------------------------------------- |
-| `pressure`        | `native_pressure`                        |
-| `templow`         | `native_temp_low`, `native_templow`      |
-| `precipitation`   | `native_precipitation`                   |
-| `apparent_temperature` | `native_apparent_temperature`       |
-
-This means compliant weather providers do not need to add non-standard duplicate fields just to satisfy the card.
-
-###### What custom icons can I use?
-Icons should be in svg format. Icons should have names as shown [here](https://github.com/mlamberts78/weather-chart-card/blob/master/src/const.js#L24). Example:
-![130360372-76d70c42-986c-46e3-b9b5-810f0317f94f](https://github.com/mlamberts78/weather-chart-card/assets/93537082/d3ee55a2-e64f-4354-b36d-9faf6ea37361)
-
-#### Example usage:
-###### Card with current time, date and day
-![date-time](https://github.com/mlamberts78/weather-chart-card/assets/93537082/ab2c32f7-8c6a-4a7e-84fc-f857a519a725)
+### Card with Current Time, Date and Day
 ```yaml
-type: custom:weather-chart-card
+type: custom:weather-chart-card-ha
 entity: weather.weather_home
 show_time: true
 show_day: true
 show_date: true
 animated_icons: true
 icon_style: style1
-
 ```
-###### Style2 chart
-![style2](https://github.com/mlamberts78/weather-chart-card/assets/93537082/3067cc43-0e80-492c-b4a5-771b1e44ea17)
+
+### Card with Daily/Hourly Toggle
 ```yaml
-type: custom:weather-chart-card
+type: custom:weather-chart-card-ha
+entity: weather.weather_home
+show_forecast_toggle: true
+show_time: true
+show_day: true
+show_date: true
+animated_icons: true
+forecast:
+  type: daily  # Starting view (user can toggle to hourly)
+```
+
+### Style2 Chart
+```yaml
+type: custom:weather-chart-card-ha
 entity: weather.my_home
 forecast:
   style: style2
 ```
-###### Chart only
-![Chart-only](https://github.com/mlamberts78/weather-chart-card/assets/93537082/c99d85a4-30d1-4fd9-90ff-877421b39e9b)
+
+### Chart Only (Minimal View)
 ```yaml
-type: custom:weather-chart-card
+type: custom:weather-chart-card-ha
 entity: weather.my_home
 show_main: false
 show_attributes: false
@@ -170,36 +255,225 @@ forecast:
   show_wind_forecast: false
 ```
 
-###### OpenCWB / HA-native compatible example
+### Custom Units
 ```yaml
-type: custom:weather-chart-card
-entity: weather.opencwa_xin_dian_qu
-show_main: true
-show_attributes: true
-show_current_condition: true
-forecast:
-  type: daily
-  precipitation_type: rainfall
-```
-
-Notes:
-- This fork reads both legacy and HA-native field names.
-- Daily low temperature can come from `templow`, `native_temp_low`, or `native_templow`.
-- Pressure can come from `pressure` or `native_pressure`.
-- Rainfall can come from `precipitation` or `native_precipitation`.
-- If your provider only has probability values, set `precipitation_type: probability`.
-
-###### Custom units
-![Units](https://github.com/mlamberts78/weather-chart-card/assets/93537082/e72862ee-9bb7-4f97-9a3c-b17663c458aa)
-```yaml
-type: custom:weather-chart-card
+type: custom:weather-chart-card-ha
 entity: weather.my_home
 units:
   pressure: mmHg
   speed: m/s
+  temperature: °F
 ```
 
-###### Supported languages:
+### Custom Timezone
+```yaml
+type: custom:weather-chart-card-ha
+entity: weather.my_home
+show_time: true
+show_day: true
+show_date: true
+timezone: America/New_York
+```
+
+### Dual Location Setup
+Perfect for monitoring weather in multiple locations with different units and timezones:
+
+```yaml
+# Issaquah (Imperial Units, PST)
+type: custom:weather-chart-card-ha
+entity: weather.forecast_issaquah
+location_name: "Issaquah"
+timezone: "America/Los_Angeles"
+locale: en-US # or simple: en
+units:
+  temperature: "°F"
+  pressure: "inHg"
+  speed: "mph"
+forecast:
+  show_date_labels: true
+  condition_icon_size_multiplier: 2.0
+  use_color_thresholds: true
+
+# Câmpina (Metric Units, EET)
+type: custom:weather-chart-card-ha
+entity: weather.forecast_campina
+location_name: "Câmpina"
+timezone: "Europe/Bucharest"
+locale: ro-RO # or simple: ro
+units:
+  temperature: "°C"
+  pressure: "mmHg"
+  speed: "km/h"
+forecast:
+  show_date_labels: true
+  condition_icon_size_multiplier: 2.0
+  use_color_thresholds: true
+```
+
+### Temperature Gradient Colors
+
+The card automatically colors the high temperature line based on comfort levels with a 6-level spectrum:
+- **< 5°C / 41°F**: Dark Blue (Cold)
+- **5-15°C / 41-59°F**: Light Blue (Cool)  
+- **15-22°C / 59-72°F**: Green (Comfortable - good weather range)
+- **22-26°C / 72-79°F**: Yellow (Pleasant/Warm)
+- **26-32°C / 79-90°F**: Orange (Hot)
+- **> 32°C / 90°F**: Red (Very Hot)
+
+The night temperature line displays as a dashed line in solid color for easy distinction.
+
+**Enabled by default.** Example configuration:
+```yaml
+type: custom:weather-chart-card-ha
+entity: weather.my_home
+forecast:
+  use_color_thresholds: true  # Enable gradient colors (default)
+  style: style2
+```
+
+To disable automatic gradients and use solid colors:
+```yaml
+type: custom:weather-chart-card-ha
+entity: weather.my_home
+forecast:
+  use_color_thresholds: false
+  temperature1_color: rgba(255, 152, 0, 1.0)
+  temperature2_color: rgba(68, 115, 158, 1.0)
+```
+
+### Date Labels in Daily Forecast
+Show date numbers below weekday labels for better context:
+```yaml
+type: custom:weather-chart-card-ha
+entity: weather.my_home
+forecast:
+  type: daily
+  show_date_labels: true  # Shows "MON" and "8" on separate lines
+```
+
+### Custom Icon Sizes
+Fine-tune icon sizes for your layout:
+```yaml
+type: custom:weather-chart-card-ha
+entity: weather.my_home
+icons_size: 20                                    # Base icon size
+main_icon_size: 90                                # Main weather icon
+forecast:
+  condition_icon_size_multiplier: 1.5             # Forecast icons (20 × 1.5 = 30px)
+```
+
+---
+
+## 🎨 Custom Icons
+
+Icons should be in SVG format. Icons should have names as shown [here](https://github.com/mlamberts78/weather-chart-card-ha/blob/master/src/const.js#L24).
+
+Example:
+![130360372-76d70c42-986c-46e3-b9b5-810f0317f94f](https://github.com/mlamberts78/weather-chart-card-ha/assets/93537082/d3ee55a2-e64f-4354-b36d-9faf6ea37361)
+
+---
+
+## 🐛 Troubleshooting
+
+### Icons Not Showing
+
+1. Clear browser cache (Ctrl+Shift+R / Cmd+Shift+R)
+2. Check browser console for errors (F12)
+3. Verify resource is loaded in Settings → Dashboards → Resources
+4. Try incognito/private browsing mode
+
+### Temperature Gradient Not Working
+
+1. Ensure `use_color_thresholds: true` in forecast config
+2. Check that temperature data is available from weather entity
+3. Verify units are set correctly (°F or °C)
+
+### Wrong Timezone
+
+1. Set explicit timezone: `timezone: "America/Los_Angeles"`
+2. Verify timezone is valid [IANA timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+3. Restart Home Assistant after changes
+
+### Card Not Loading
+
+1. Ensure card is installed (check HACS or www folder)
+2. Verify resource is added correctly
+3. Check Home Assistant logs for errors
+4. Try removing and re-adding the card
+
+---
+
+## 🔧 Development
+
+### Local Testing Without Home Assistant
+For developers who want to test changes without installing the card in Home Assistant, we provide a comprehensive test suite with mock data and interactive controls.
+
+#### Quick Start
+
+1. **Install dependencies:**
+```bash
+npm install
+```
+
+2. **Start the development server:**
+```bash
+npm start
+```
+This will start a local server on port 5500 with automatic rebuilding when source files change.
+
+3. **Open the test suite:**
+Navigate to `http://localhost:5500/test.html` in your browser.
+
+#### Test Suite Features
+
+The test page provides a full-featured testing environment with:
+
+**Weather Conditions (11 options)**
+- Test all weather states: Sunny, Cloudy, Partly Cloudy, Rainy, Pouring, Snowy, Fog, Lightning, Hail, Windy, Clear Night
+- Each condition includes realistic mock data (temperature, humidity, pressure, wind, visibility)
+- Auto-cycling mode to automatically test all conditions
+
+**Multi-Language Support (10 languages)**
+- Test translations: English, German, French, Spanish, Italian, Dutch, Polish, Russian, Romanian, Korean
+- Weather descriptions update based on language selection
+- Auto-cycling mode for language testing
+
+**Interactive Controls**
+- Theme toggle (Light/Dark mode)
+- Forecast type switching (Daily/Hourly)
+- Icon style switching (Fill/Line icons from local directories)
+- Manual condition and language selection
+- Auto-cycle modes for automated testing
+
+**Real-Time Features**
+- Live clock display with seconds
+- Current date and day
+- All card features enabled by default
+- Status bar showing current condition, language, and forecast type
+
+**Development Benefits**
+- Automatic rebuilding on file changes
+- Source maps for debugging
+- No Home Assistant installation required
+- Instant feedback on UI changes
+- Test all features without integration dependencies
+
+#### Stopping the Server
+
+To stop the development server, press `Ctrl+C` in the terminal where it's running.
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+The compiled file will be in `dist/weather-chart-card-ha.js`
+
+---
+
+## 🌍 Supported Languages
+
 | Language         | Locale  |
 | ---------------- | ------- |
 | Bulgarian        | bg      |
@@ -225,3 +499,60 @@ units:
 | Swedish          | sv      |
 | Ukrainian        | uk      |
 | 한국어           | ko      |
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests.
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/ivanlee1007/weather-chart-card.git
+cd weather-chart-card-ha
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+
+# Build for production
+npm run build
+```
+
+---
+
+## 📋 Changelog
+
+See [Releases](https://github.com/ivanlee1007/weather-chart-card/releases) for version history and changes.
+
+---
+
+## 🙏 Credits
+
+- **Original Card**: [mlamberts78](https://github.com/mlamberts78/weather-chart-card-ha) - Created the original weather-chart-card-ha
+- **Weather Icons**: [Basmilius](https://github.com/basmilius/weather-icons) - Beautiful animated weather icons (served via this project's CDN for reliability)
+- **Enhancements**: [W4MHI](https://github.com/w4mhi) - Temperature gradients, timezone support, daily/hourly toggle, layout improvements
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## ⭐ Support
+
+If you find this card useful, please consider:
+- ⭐ Starring the repository
+- 🐛 Reporting issues
+- 💡 Suggesting new features
+- 🔀 Contributing code
+
+---
+
+**Made with ❤️ by [W4MHI](https://github.com/w4mhi)**
