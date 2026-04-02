@@ -998,13 +998,51 @@ class WeatherChartCardEditor extends s {
     }
   }
 
+  _extractEventValue(event) {
+    if (!event) return undefined;
+
+    if (event.detail && event.detail.value !== undefined) {
+      return event.detail.value;
+    }
+
+    if (event.currentTarget && event.currentTarget.value !== undefined) {
+      return event.currentTarget.value;
+    }
+
+    if (event.target && event.target.value !== undefined) {
+      return event.target.value;
+    }
+
+    if (event.detail && event.detail.index !== undefined && event.currentTarget) {
+      const items = event.currentTarget.querySelectorAll('ha-list-item');
+      const item = items[event.detail.index];
+      if (item && item.value !== undefined) {
+        return item.value;
+      }
+    }
+
+    if (typeof event.composedPath === 'function') {
+      for (const node of event.composedPath()) {
+        if (node && node.value !== undefined) {
+          return node.value;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
   _EntityChanged(event, key) {
     if (!this._config) {
       return;
     }
+    const value = this._extractEventValue(event);
+    if (value === undefined) {
+      return;
+    }
     const newConfig = { ...this._config };
-    newConfig.entity = event.target.value;
-    this._entity = event.target.value;
+    newConfig.entity = value;
+    this._entity = value;
     this.configChanged(newConfig);
   }
 
@@ -1023,6 +1061,12 @@ class WeatherChartCardEditor extends s {
     }
 
     let newConfig = { ...this._config };
+    const checked = event?.target?.checked;
+    const value = checked !== undefined ? checked : this._extractEventValue(event);
+
+    if (value === undefined) {
+      return;
+    }
 
     if (key.includes('.')) {
       const parts = key.split('.');
@@ -1030,24 +1074,14 @@ class WeatherChartCardEditor extends s {
 
       for (let i = 0; i < parts.length - 1; i++) {
         const part = parts[i];
-
         currentLevel[part] = { ...currentLevel[part] };
-
         currentLevel = currentLevel[part];
       }
 
       const finalKey = parts[parts.length - 1];
-      if (event.target.checked !== undefined) {
-        currentLevel[finalKey] = event.target.checked;
-      } else {
-        currentLevel[finalKey] = event.target.value;
-      }
+      currentLevel[finalKey] = value;
     } else {
-      if (event.target.checked !== undefined) {
-        newConfig[key] = event.target.checked;
-      } else {
-        newConfig[key] = event.target.value;
-      }
+      newConfig[key] = value;
     }
 
     this.configChanged(newConfig);
