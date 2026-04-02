@@ -2172,8 +2172,8 @@ if (!customElements.get('weather-chart-card')) {
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "weather-chart-card",
-  name: "Enhanced Weather Chart Card",
-  description: "Enhanced custom weather card with charts.",
+  name: "UNiNUS Weather Chart Card",
+  description: "UNiNUS weather card with charts and Home Assistant-native editor selectors.",
   preview: true,
   documentationURL: "https://github.com/ivanlee1007/weather-chart-card",
 });

@@ -987,6 +987,10 @@ var t;const i=window,s$1=i.trustedTypes,e=s$1?s$1.createPolicy("lit-html",{creat
  * SPDX-License-Identifier: BSD-3-Clause
  */var l,o;class s extends u$1{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0;}createRenderRoot(){var t,e;const i=super.createRenderRoot();return null!==(t=(e=this.renderOptions).renderBefore)&&void 0!==t||(e.renderBefore=i.firstChild),i}update(t){const i=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=D(i,this.renderRoot,this.renderOptions);}connectedCallback(){var t;super.connectedCallback(),null===(t=this._$Do)||void 0===t||t.setConnected(true);}disconnectedCallback(){var t;super.disconnectedCallback(),null===(t=this._$Do)||void 0===t||t.setConnected(false);}render(){return T}}s.finalized=true,s._$litElement$=true,null===(l=globalThis.litElementHydrateSupport)||void 0===l||l.call(globalThis,{LitElement:s});const n$1=globalThis.litElementPolyfillSupport;null==n$1||n$1({LitElement:s});(null!==(o=globalThis.litElementVersions)&&void 0!==o?o:globalThis.litElementVersions=[]).push("3.3.3");
 
+const MAIN_ENTITY_SCHEMA = [
+  { name: "entity", title: "Weather entity", required: true, selector: { entity: { domain: 'weather' } } },
+];
+
 const ALT_SCHEMA = [
   { name: "temp", title: "Alternative temperature sensor", selector: { entity: { domain: 'sensor' } } },
   { name: "feels_like", title: "Alternative feels like temperature sensor", selector: { entity: { domain: 'sensor' } } },
@@ -1001,22 +1005,23 @@ const ALT_SCHEMA = [
   { name: "visibility", title: "Alternative visibility sensor", selector: { entity: { domain: 'sensor' } } },
 ];
 
+const TEXT_SENSOR_SCHEMA = [
+  { name: "text_sensor_entity", title: "Text sensor entity", selector: { entity: { domain: 'sensor' } } },
+  { name: "text_sensor_title", title: "Text sensor title", selector: { text: {} } },
+];
+
 class WeatherChartCardEditor extends s {
   static get properties() {
     return {
       _config: { type: Object },
       currentPage: { type: String },
-      entities: { type: Array },
       hass: { type: Object },
-      _entity: { type: String },
     };
   }
 
   constructor() {
     super();
     this.currentPage = 'card';
-    this._entity = '';
-    this.entities = [];
     this._formValueChanged = this._formValueChanged.bind(this);
     
     // Initialize with empty config to prevent crashes
@@ -1031,7 +1036,6 @@ class WeatherChartCardEditor extends s {
       throw new Error("Invalid configuration");
     }
     this._config = config;
-    this._entity = config.entity || '';
     this.hasApparentTemperature = (
       this.hass &&
       this.hass.states[config.entity] &&
@@ -1062,7 +1066,6 @@ class WeatherChartCardEditor extends s {
       this.hass.states[config.entity].attributes &&
       this.hass.states[config.entity].attributes.description !== undefined
     ) || config.description !== undefined;
-    this.fetchEntities();	  
     this.requestUpdate();
   }
 
@@ -1070,20 +1073,7 @@ class WeatherChartCardEditor extends s {
     return this._config;
   }
 
-  updated(changedProperties) {
-    if (changedProperties.has('hass')) {
-      this.fetchEntities();
-    }
-    if (changedProperties.has('_config') && this._config && this._config.entity) {
-      this._entity = this._config.entity;
-    }
-  }
-
-  fetchEntities() {
-    if (this.hass) {
-      this.entities = Object.keys(this.hass.states).filter((e) => e.startsWith('weather.'));
-      this.requestUpdate();
-    }
+  updated(_changedProperties) {
   }
 
   _extractEventValue(event) {
@@ -1124,21 +1114,10 @@ class WeatherChartCardEditor extends s {
     return undefined;
   }
 
-  _EntityChanged(event, key) {
-    if (!this._config) {
-      return;
-    }
-    const value = this._extractEventValue(event);
-    if (value === undefined) {
-      return;
-    }
-    const newConfig = { ...this._config };
-    newConfig.entity = value;
-    this._entity = value;
-    this.configChanged(newConfig);
-  }
-
   configChanged(newConfig) {
+    this._config = newConfig;
+    this.requestUpdate();
+
     const event = new Event("config-changed", {
       bubbles: true,
       composed: true,
@@ -1218,11 +1197,24 @@ class WeatherChartCardEditor extends s {
   }
 
   _formValueChanged(event) {
-    if (event.target.tagName.toLowerCase() === 'ha-form') {
-      const newConfig = event.detail.value;
-      this.configChanged(newConfig);
-      this.requestUpdate();
+    if (event.target.tagName.toLowerCase() !== 'ha-form') {
+      return;
     }
+
+    const section = event.target.dataset.section || 'root';
+    const formValue = event.detail.value || {};
+    let newConfig = { ...this._config };
+
+    if (section === 'root') {
+      newConfig = { ...newConfig, ...formValue };
+    } else if (section === 'alternate') {
+      newConfig = { ...newConfig, ...formValue };
+    } else if (section === 'text-sensor') {
+      newConfig = { ...newConfig, ...formValue };
+    }
+
+    this.configChanged(newConfig);
+    this.requestUpdate();
   }
 
   showPage(pageName) {
@@ -1330,16 +1322,13 @@ class WeatherChartCardEditor extends s {
       </style>
       <div>
       <div class="textfield-container">
-      <div>
-        <label>Entity</label>
-        <select
-          style="width: 100%; padding: 8px; margin: 10px 0; font-size: 14px; border: 1px solid var(--divider-color); border-radius: 4px; background: var(--card-background-color); color: var(--primary-text-color);"
-          .value=${this._entity || ''}
-          @change=${(e) => this._EntityChanged(e, 'entity')}
-        >
-          ${this.entities.map((entity) => x`<option value=${entity}>${entity}</option>`) }
-        </select>
-      </div>
+      <ha-form
+        .data=${{ entity: this._config.entity || '' }}
+        .schema=${MAIN_ENTITY_SCHEMA}
+        .hass=${this.hass}
+        data-section="root"
+        @value-changed=${this._formValueChanged}
+      ></ha-form>
       <ha-textfield
         label="Title"
         .value="${this._config.title || ''}"
@@ -1702,18 +1691,17 @@ class WeatherChartCardEditor extends s {
           Show text sensor content
         </label>
       </div>
-      <div class="flex-container" style="${this._config.show_text_sensor ? 'display: flex;' : 'display: none;'}">
-        <ha-textfield
-          label="Text sensor entity"
-          placeholder="sensor.opencwa_forecast_summary"
-          .value="${this._config.text_sensor_entity || ''}"
-          @change="${(e) => this._valueChanged(e, 'text_sensor_entity')}"
-        ></ha-textfield>
-        <ha-textfield
-          label="Text sensor title"
-          .value="${this._config.text_sensor_title || ''}"
-          @change="${(e) => this._valueChanged(e, 'text_sensor_title')}"
-        ></ha-textfield>
+      <div style="${this._config.show_text_sensor ? 'display: block;' : 'display: none;'}">
+        <ha-form
+          .data=${{
+            text_sensor_entity: this._config.text_sensor_entity || '',
+            text_sensor_title: this._config.text_sensor_title || '',
+          }}
+          .schema=${TEXT_SENSOR_SCHEMA}
+          .hass=${this.hass}
+          data-section="text-sensor"
+          @value-changed=${this._formValueChanged}
+        ></ha-form>
       </div>
           <div class="switch-container">
             <ha-switch
@@ -1957,9 +1945,10 @@ class WeatherChartCardEditor extends s {
         <div class="page-container ${this.currentPage === 'alternate' ? 'active' : ''}">
           <h5>Alternative sensors for the main card attributes:</h5>
           <ha-form
-            .data=${this._config}
+            .data=${Object.fromEntries(ALT_SCHEMA.map((field) => [field.name, this._config[field.name] || '']))}
             .schema=${ALT_SCHEMA}
             .hass=${this.hass}
+            data-section="alternate"
             @value-changed=${this._formValueChanged}
           ></ha-form>
         </div>
@@ -20423,8 +20412,8 @@ if (!customElements.get('weather-chart-card')) {
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "weather-chart-card",
-  name: "Enhanced Weather Chart Card",
-  description: "Enhanced custom weather card with charts.",
+  name: "UNiNUS Weather Chart Card",
+  description: "UNiNUS weather card with charts and Home Assistant-native editor selectors.",
   preview: true,
   documentationURL: "https://github.com/ivanlee1007/weather-chart-card",
 });
