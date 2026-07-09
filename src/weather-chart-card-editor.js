@@ -735,7 +735,14 @@ class WeatherChartCardEditor extends LitElement {
             @change="${(e) => this._valueChanged(e, 'alert_show_message')}"
             .checked="${this._config.alert_show_message !== false}"
           ></ha-switch>
-          <label class="switch-label">Show full alert message</label>
+          <label class="switch-label">Show full alert message when expanded</label>
+        </div>
+        <div class="switch-container">
+          <ha-switch
+            @change="${(e) => this._valueChanged(e, 'alert_default_expanded')}"
+            .checked="${this._config.alert_default_expanded === true}"
+          ></ha-switch>
+          <label class="switch-label">Start alert banners expanded</label>
         </div>
         <div class="switch-container">
           <ha-switch

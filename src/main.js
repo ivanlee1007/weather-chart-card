@@ -58,14 +58,7 @@ static getStubConfig(hass, unusedEntities, allEntities) {
     alert_entity_3: '',
     alert_show_message: true,
     alert_flash_critical: true,
-    alert_max_items: 3,
-    show_alerts: false,
-    alert_entities: [],
-    alert_entity_1: '',
-    alert_entity_2: '',
-    alert_entity_3: '',
-    alert_show_message: true,
-    alert_flash_critical: true,
+    alert_default_expanded: false,
     alert_max_items: 3,
     show_forecast_toggle: false,
     use_12hour_format: false,
@@ -107,7 +100,8 @@ static getStubConfig(hass, unusedEntities, allEntities) {
       windDirection: {type: Number},
       forecastChart: {type: Object},
       forecastItems: {type: Number},
-      forecasts: { type: Array }
+      forecasts: { type: Array },
+      alertsExpanded: { type: Boolean }
     };
   }
 
@@ -132,6 +126,15 @@ setConfig(config) {
     text_sensor_title: '',
     text_sensor_title_size: 14,
     text_sensor_content_size: 13,
+    show_alerts: false,
+    alert_entities: [],
+    alert_entity_1: '',
+    alert_entity_2: '',
+    alert_entity_3: '',
+    alert_show_message: true,
+    alert_flash_critical: true,
+    alert_default_expanded: false,
+    alert_max_items: 3,
     show_forecast_toggle: false,
     ...config,
     forecast: {
@@ -176,6 +179,9 @@ setConfig(config) {
   }
 
   this.config = cardConfig;
+  if (this.alertsExpanded === undefined) {
+    this.alertsExpanded = cardConfig.alert_default_expanded === true;
+  }
   if (!config.entity) {
     throw new Error('Please, define entity in the card config');
   }
@@ -285,6 +291,7 @@ handleForecastTypeToggle() {
     super();
     this.resizeObserver = null;
     this.resizeInitialized = false;
+    this.alertsExpanded = undefined;
   }
 
   connectedCallback() {
@@ -1678,6 +1685,20 @@ updateChart({ forecasts, forecastChart } = this) {
           padding: 2px 7px;
           border-radius: 999px;
           background: rgba(255, 255, 255, 0.22);
+          white-space: nowrap;
+        }
+        .weather-alert-toggle {
+          margin-left: 4px;
+          font-size: 18px;
+          font-weight: 900;
+          line-height: 1;
+          opacity: 0.95;
+        }
+        .weather-alert-helper {
+          margin-top: 6px;
+          font-size: 12px;
+          font-weight: 700;
+          opacity: 0.84;
         }
         @keyframes weatherAlertPulse {
           0%, 100% { transform: scale(1); filter: brightness(1); }
@@ -1765,7 +1786,6 @@ getActiveAlertStates({ config } = this) {
     return [];
   }
   const severityRank = { critical: 0, warning: 1, advisory: 2, info: 3 };
-  const maxItems = Math.max(1, Number(config.alert_max_items || 3));
   return this.getAlertEntities({ config })
     .map((entityId) => ({ entityId, stateObj: this._hass.states[entityId] }))
     .filter(({ stateObj }) => stateObj && stateObj.state === 'active')
@@ -1775,8 +1795,7 @@ getActiveAlertStates({ config } = this) {
       const aRank = severityRank[aSeverity] !== undefined ? severityRank[aSeverity] : 99;
       const bRank = severityRank[bSeverity] !== undefined ? severityRank[bSeverity] : 99;
       return aRank - bRank;
-    })
-    .slice(0, maxItems);
+    });
 }
 
 alertIcon(severity) {
@@ -1786,31 +1805,59 @@ alertIcon(severity) {
   return 'ℹ️';
 }
 
+toggleAlertExpansion() {
+  this.alertsExpanded = !this.alertsExpanded;
+  this.requestUpdate();
+}
+
 renderAlertBanner({ config } = this) {
   const alerts = this.getActiveAlertStates({ config });
   if (!alerts.length) {
     return html``;
   }
+
+  const maxItems = Math.max(1, Number(config.alert_max_items || 3));
+  const expanded = this.alertsExpanded === true;
+  const visibleAlerts = expanded ? alerts.slice(0, maxItems) : alerts.slice(0, 1);
+  const hiddenCount = Math.max(0, alerts.length - visibleAlerts.length);
+  const firstSeverity = alerts[0].stateObj.attributes && alerts[0].stateObj.attributes.severity ? alerts[0].stateObj.attributes.severity : 'info';
+  const flash = firstSeverity === 'critical' && config.alert_flash_critical !== false;
+
   return html`
     <div class="weather-alerts-section">
-      ${alerts.map(({ entityId, stateObj }, index) => {
+      ${visibleAlerts.map(({ entityId, stateObj }, index) => {
         const attrs = stateObj.attributes || {};
         const severity = attrs.severity || 'info';
         const title = attrs.title || attrs.friendly_name || entityId;
         const summary = attrs.summary || '';
         const message = attrs.message || '';
-        const flash = severity === 'critical' && config.alert_flash_critical !== false;
         return html`
-          <div class="weather-alert-banner ${severity} ${flash ? 'flash' : ''}" @click="${() => this.showMoreInfo(entityId)}">
+          <div
+            class="weather-alert-banner ${severity} ${flash && index === 0 ? 'flash' : ''}"
+            role="button"
+            tabindex="0"
+            @click="${() => this.toggleAlertExpansion()}"
+            @keydown="${(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                this.toggleAlertExpansion();
+              }
+            }}"
+          >
             <div class="weather-alert-header">
               <span class="weather-alert-icon">${this.alertIcon(severity)}</span>
               <span>${title}</span>
+              ${index === 0 && hiddenCount > 0 ? html`<span class="weather-alert-count">+${hiddenCount} 其他告警</span>` : html``}
+              ${index === 0 ? html`<span class="weather-alert-toggle">${expanded ? '⌃' : '⌄'}</span>` : html``}
             </div>
             ${summary ? html`<div class="weather-alert-summary">${summary}</div>` : html``}
-            ${config.alert_show_message !== false && message ? html`<div class="weather-alert-message">${message}</div>` : html``}
+            ${expanded && config.alert_show_message !== false && message ? html`<div class="weather-alert-message">${message}</div>` : html``}
           </div>
         `;
       })}
+      ${expanded && hiddenCount > 0 ? html`
+        <div class="weather-alert-helper">另有 ${hiddenCount} 則告警因 alert_max_items 設定未顯示。</div>
+      ` : html``}
     </div>
   `;
 }

@@ -136,6 +136,7 @@ alert_entities:
   - sensor.opencwa_an_ping_qu_weather_alert_notification
   - sensor.opencwa_an_ping_qu_tropical_cyclone_notification
 alert_show_message: true
+alert_default_expanded: false
 alert_flash_critical: true
 alert_max_items: 3
 ```
@@ -147,11 +148,12 @@ alert_max_items: 3
 | `show_alerts` | boolean | `false` | Show weather alert banners above the normal card content |
 | `alert_entities` | list | `[]` | Notification sensor entities to read; YAML-friendly list form |
 | `alert_entity_1` / `alert_entity_2` / `alert_entity_3` | string | empty | GUI-editor friendly sensor slots |
-| `alert_show_message` | boolean | `true` | Show the full notification `message` attribute in the banner |
+| `alert_show_message` | boolean | `true` | Show the full notification `message` attribute when the banner is expanded |
+| `alert_default_expanded` | boolean | `false` | Start with all active alert messages expanded instead of the compact summary view |
 | `alert_flash_critical` | boolean | `true` | Pulse/glow `critical` banners |
 | `alert_max_items` | number | `3` | Maximum number of active banners to display |
 
-Alerts are sorted by severity: `critical` > `warning` > `advisory` > `info`. Clicking a banner opens Home Assistant More Info for that notification sensor.
+Alerts are sorted by severity: `critical` > `warning` > `advisory` > `info`. The card starts collapsed by default: it shows the highest-priority alert summary plus a `+N` badge for other active alerts. Click the banner to expand all active alerts and show their full messages; click again to collapse.
 
 ---
 
