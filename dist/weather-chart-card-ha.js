@@ -20110,6 +20110,21 @@ toggleAlertExpansion() {
   this.requestUpdate();
 }
 
+
+cleanAlertTitle(title, severity) {
+  if (!title) return title;
+  const icon = this.alertIcon(severity);
+  let cleaned = String(title).trim();
+  if (icon && cleaned.startsWith(icon)) {
+    cleaned = cleaned.slice(icon.length).trim();
+  }
+  // OpenCWA notification titles may already include an emoji/symbol. The banner
+  // renders a dedicated large severity icon, so strip common leading alert icons
+  // from the text title to avoid duplicated small+large icons.
+  cleaned = cleaned.replace(/^[\s⚠🚨🌀ℹ️☔⛈️🌧️🌪️🔥❄️]+\s*/u, '').trim();
+  return cleaned || title;
+}
+
 renderAlertBanner({ config } = this) {
   const alerts = this.getActiveAlertStates({ config });
   if (!alerts.length) {
@@ -20128,7 +20143,7 @@ renderAlertBanner({ config } = this) {
       ${visibleAlerts.map(({ entityId, stateObj }, index) => {
         const attrs = stateObj.attributes || {};
         const severity = attrs.severity || 'info';
-        const title = attrs.title || attrs.friendly_name || entityId;
+        const title = this.cleanAlertTitle(attrs.title || attrs.friendly_name || entityId, severity);
         const summary = attrs.summary || '';
         const message = attrs.message || '';
         return x`
