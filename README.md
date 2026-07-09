@@ -55,12 +55,12 @@ This fork focuses on:
 
 ### Manual installation
 
-1. Download `weather-chart-card.js` from the [latest release](https://github.com/ivanlee1007/weather-chart-card/releases/latest)
+1. Download `weather-chart-card-ha.js` from the [latest release](https://github.com/ivanlee1007/weather-chart-card/releases/latest)
 2. Copy it to `<config>/www/`
 3. Add a Lovelace resource:
 
 ```text
-URL: /local/weather-chart-card.js
+URL: /local/weather-chart-card-ha.js
 Type: module
 ```
 
@@ -357,7 +357,7 @@ Build outputs:
 - `dist/weather-chart-card.js`
 - `dist/weather-chart-card-ha.js`
 
-For HACS, the published frontend filename is `weather-chart-card.js`.
+For HACS, the published frontend filename is `weather-chart-card-ha.js`.
 
 ---
 

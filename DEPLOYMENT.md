@@ -7,7 +7,7 @@ This repository is published to HACS as **UNiNUS Weather Chart Card**.
 - Repository: `ivanlee1007/weather-chart-card`
 - HACS name: `UNiNUS Weather Chart Card`
 - Canonical Lovelace type: `custom:weather-chart-card`
-- Published frontend filename: `weather-chart-card.js`
+- Published frontend filename: `weather-chart-card-ha.js`
 
 ## Release workflow
 
