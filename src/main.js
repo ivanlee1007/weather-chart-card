@@ -51,6 +51,22 @@ static getStubConfig(hass, unusedEntities, allEntities) {
     text_sensor_title: '',
     text_sensor_title_size: 14,
     text_sensor_content_size: 13,
+    show_alerts: false,
+    alert_entities: [],
+    alert_entity_1: '',
+    alert_entity_2: '',
+    alert_entity_3: '',
+    alert_show_message: true,
+    alert_flash_critical: true,
+    alert_max_items: 3,
+    show_alerts: false,
+    alert_entities: [],
+    alert_entity_1: '',
+    alert_entity_2: '',
+    alert_entity_3: '',
+    alert_show_message: true,
+    alert_flash_critical: true,
+    alert_max_items: 3,
     show_forecast_toggle: false,
     use_12hour_format: false,
     icons_size: 30,
@@ -1596,6 +1612,77 @@ updateChart({ forecasts, forecastChart } = this) {
           margin-top: 5px;
           font-weight: 400;
         }
+        .weather-alerts-section {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-bottom: 14px;
+        }
+        .weather-alert-banner {
+          border-radius: 12px;
+          padding: 12px 14px;
+          color: #fff;
+          cursor: pointer;
+          border: 2px solid rgba(255, 255, 255, 0.45);
+          box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+          overflow: hidden;
+        }
+        .weather-alert-banner.critical {
+          background: linear-gradient(135deg, #8b0000, #e00032 55%, #ff1744);
+          border-color: #ff8a80;
+          box-shadow: 0 0 20px rgba(255, 23, 68, 0.70);
+        }
+        .weather-alert-banner.critical.flash {
+          animation: weatherAlertPulse 1.8s ease-in-out infinite;
+        }
+        .weather-alert-banner.warning {
+          background: linear-gradient(135deg, #bf360c, #f57c00 60%, #ff9800);
+          border-color: #ffd180;
+        }
+        .weather-alert-banner.advisory {
+          background: linear-gradient(135deg, #1a237e, #3949ab 55%, #5e35b1);
+          border-color: #b39ddb;
+        }
+        .weather-alert-banner.info {
+          background: linear-gradient(135deg, #006064, #00838f);
+          border-color: #80deea;
+        }
+        .weather-alert-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 800;
+          font-size: 15px;
+          line-height: 1.25;
+        }
+        .weather-alert-icon {
+          font-size: 20px;
+          line-height: 1;
+        }
+        .weather-alert-summary {
+          margin-top: 5px;
+          font-weight: 650;
+          opacity: 0.96;
+        }
+        .weather-alert-message {
+          margin-top: 8px;
+          font-size: 13px;
+          line-height: 1.45;
+          white-space: pre-wrap;
+          opacity: 0.96;
+        }
+        .weather-alert-count {
+          margin-left: auto;
+          font-size: 12px;
+          font-weight: 800;
+          padding: 2px 7px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.22);
+        }
+        @keyframes weatherAlertPulse {
+          0%, 100% { transform: scale(1); filter: brightness(1); }
+          50% { transform: scale(1.01); filter: brightness(1.18); }
+        }
         .text-sensor-section {
           margin-top: 14px;
           padding-top: 12px;
@@ -1639,6 +1726,7 @@ updateChart({ forecasts, forecastChart } = this) {
 
       <ha-card header="${config.title}">
         <div class="card">
+          ${this.renderAlertBanner()}
           ${this.renderClock()}
           ${this.renderMain()}
           ${this.renderAttributes()}
@@ -1660,6 +1748,71 @@ getTextSensorState() {
   }
 
   return this._hass.states[this.config.text_sensor_entity] || null;
+}
+
+
+getAlertEntities({ config } = this) {
+  const configured = [];
+  if (Array.isArray(config.alert_entities)) {
+    configured.push(...config.alert_entities);
+  }
+  configured.push(config.alert_entity_1, config.alert_entity_2, config.alert_entity_3);
+  return [...new Set(configured.filter((entity) => typeof entity === 'string' && entity.trim() !== ''))];
+}
+
+getActiveAlertStates({ config } = this) {
+  if (config.show_alerts !== true || !this._hass || !this._hass.states) {
+    return [];
+  }
+  const severityRank = { critical: 0, warning: 1, advisory: 2, info: 3 };
+  const maxItems = Math.max(1, Number(config.alert_max_items || 3));
+  return this.getAlertEntities({ config })
+    .map((entityId) => ({ entityId, stateObj: this._hass.states[entityId] }))
+    .filter(({ stateObj }) => stateObj && stateObj.state === 'active')
+    .sort((a, b) => {
+      const aSeverity = a.stateObj.attributes ? a.stateObj.attributes.severity : undefined;
+      const bSeverity = b.stateObj.attributes ? b.stateObj.attributes.severity : undefined;
+      const aRank = severityRank[aSeverity] !== undefined ? severityRank[aSeverity] : 99;
+      const bRank = severityRank[bSeverity] !== undefined ? severityRank[bSeverity] : 99;
+      return aRank - bRank;
+    })
+    .slice(0, maxItems);
+}
+
+alertIcon(severity) {
+  if (severity === 'critical') return '🚨';
+  if (severity === 'warning') return '⚠️';
+  if (severity === 'advisory') return '🌀';
+  return 'ℹ️';
+}
+
+renderAlertBanner({ config } = this) {
+  const alerts = this.getActiveAlertStates({ config });
+  if (!alerts.length) {
+    return html``;
+  }
+  return html`
+    <div class="weather-alerts-section">
+      ${alerts.map(({ entityId, stateObj }, index) => {
+        const attrs = stateObj.attributes || {};
+        const severity = attrs.severity || 'info';
+        const title = attrs.title || attrs.friendly_name || entityId;
+        const summary = attrs.summary || '';
+        const message = attrs.message || '';
+        const flash = severity === 'critical' && config.alert_flash_critical !== false;
+        return html`
+          <div class="weather-alert-banner ${severity} ${flash ? 'flash' : ''}" @click="${() => this.showMoreInfo(entityId)}">
+            <div class="weather-alert-header">
+              <span class="weather-alert-icon">${this.alertIcon(severity)}</span>
+              <span>${title}</span>
+            </div>
+            ${summary ? html`<div class="weather-alert-summary">${summary}</div>` : html``}
+            ${config.alert_show_message !== false && message ? html`<div class="weather-alert-message">${message}</div>` : html``}
+          </div>
+        `;
+      })}
+    </div>
+  `;
 }
 
 renderTextSensor({ config } = this) {

@@ -18,6 +18,14 @@ const ALT_SCHEMA = [
   { name: "visibility", title: "Alternative visibility sensor", selector: { entity: { domain: 'sensor' } } },
 ];
 
+
+const ALERT_SCHEMA = [
+  { name: "alert_entity_1", title: "Alert notification sensor 1", selector: { entity: { domain: 'sensor' } } },
+  { name: "alert_entity_2", title: "Alert notification sensor 2", selector: { entity: { domain: 'sensor' } } },
+  { name: "alert_entity_3", title: "Alert notification sensor 3", selector: { entity: { domain: 'sensor' } } },
+  { name: "alert_max_items", title: "Maximum alert banners", selector: { number: { min: 1, max: 5, step: 1, mode: 'box' } } },
+];
+
 const TEXT_SENSOR_SCHEMA = [
   { name: "text_sensor_entity", title: "Text sensor entity", selector: { entity: { domain: 'sensor' } } },
   { name: "text_sensor_title", title: "Text sensor title", selector: { text: {} } },
@@ -225,6 +233,8 @@ class WeatherChartCardEditor extends LitElement {
     } else if (section === 'alternate') {
       newConfig = { ...newConfig, ...formValue };
     } else if (section === 'text-sensor') {
+      newConfig = { ...newConfig, ...formValue };
+    } else if (section === 'alerts') {
       newConfig = { ...newConfig, ...formValue };
     }
 
@@ -697,6 +707,45 @@ class WeatherChartCardEditor extends LitElement {
           </label>
         ` : ''}
       </div>
+
+      <div class="switch-container">
+        <ha-switch
+          @change="${(e) => this._valueChanged(e, 'show_alerts')}"
+          .checked="${this._config.show_alerts === true}"
+        ></ha-switch>
+        <label class="switch-label">
+          Show OpenCWA alert banners
+        </label>
+      </div>
+      <div style="${this._config.show_alerts ? 'display: block;' : 'display: none;'}">
+        <ha-form
+          .data=${{
+            alert_entity_1: this._config.alert_entity_1 || (Array.isArray(this._config.alert_entities) ? this._config.alert_entities[0] || '' : ''),
+            alert_entity_2: this._config.alert_entity_2 || (Array.isArray(this._config.alert_entities) ? this._config.alert_entities[1] || '' : ''),
+            alert_entity_3: this._config.alert_entity_3 || (Array.isArray(this._config.alert_entities) ? this._config.alert_entities[2] || '' : ''),
+            alert_max_items: Number(this._config.alert_max_items || 3),
+          }}
+          .schema=${ALERT_SCHEMA}
+          .hass=${this.hass}
+          data-section="alerts"
+          @value-changed=${this._formValueChanged}
+        ></ha-form>
+        <div class="switch-container">
+          <ha-switch
+            @change="${(e) => this._valueChanged(e, 'alert_show_message')}"
+            .checked="${this._config.alert_show_message !== false}"
+          ></ha-switch>
+          <label class="switch-label">Show full alert message</label>
+        </div>
+        <div class="switch-container">
+          <ha-switch
+            @change="${(e) => this._valueChanged(e, 'alert_flash_critical')}"
+            .checked="${this._config.alert_flash_critical !== false}"
+          ></ha-switch>
+          <label class="switch-label">Flash critical alerts</label>
+        </div>
+      </div>
+
       <div class="switch-container">
         <ha-switch
           @change="${(e) => this._valueChanged(e, 'show_text_sensor')}"

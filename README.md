@@ -37,6 +37,7 @@ This fork focuses on:
 - **Unit conversion** for temperature / pressure / speed
 - **HA-native editor selectors** for weather entity, alternate sensors, and text sensor settings
 - **Text sensor section** with configurable entity, title, title font size, and content font size
+- **OpenCWA alert banners** that can display ready-to-use CWA notification sensors with strong critical/warning/advisory styling
 - **UNiNUS card picker name** so it does not clash with upstream forks
 
 ---
@@ -101,6 +102,56 @@ units:
   pressure: hPa
   speed: km/h
 ```
+
+---
+
+
+## OpenCWA Alert Banners
+
+The card can show strong, high-visibility weather alert banners at the top of the weather card. This is designed to consume OpenCWA notification sensors such as:
+
+```yaml
+sensor.opencwa_an_ping_qu_typhoon_warning_notification
+sensor.opencwa_an_ping_qu_weather_alert_notification
+sensor.opencwa_an_ping_qu_tropical_cyclone_notification
+```
+
+The card reads each sensor state and attributes:
+
+- `state`: only `active` alerts are displayed. `inactive` and `suppressed` are hidden.
+- `severity`: controls visual style (`critical`, `warning`, `advisory`, `info`).
+- `title`: banner title.
+- `summary`: short banner summary.
+- `message`: optional full alert message.
+
+### Example
+
+```yaml
+type: custom:weather-chart-card
+entity: weather.opencwa_an_ping_qu
+location_name: 安平區
+show_alerts: true
+alert_entities:
+  - sensor.opencwa_an_ping_qu_typhoon_warning_notification
+  - sensor.opencwa_an_ping_qu_weather_alert_notification
+  - sensor.opencwa_an_ping_qu_tropical_cyclone_notification
+alert_show_message: true
+alert_flash_critical: true
+alert_max_items: 3
+```
+
+### Alert options
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `show_alerts` | boolean | `false` | Show weather alert banners above the normal card content |
+| `alert_entities` | list | `[]` | Notification sensor entities to read; YAML-friendly list form |
+| `alert_entity_1` / `alert_entity_2` / `alert_entity_3` | string | empty | GUI-editor friendly sensor slots |
+| `alert_show_message` | boolean | `true` | Show the full notification `message` attribute in the banner |
+| `alert_flash_critical` | boolean | `true` | Pulse/glow `critical` banners |
+| `alert_max_items` | number | `3` | Maximum number of active banners to display |
+
+Alerts are sorted by severity: `critical` > `warning` > `advisory` > `info`. Clicking a banner opens Home Assistant More Info for that notification sensor.
 
 ---
 

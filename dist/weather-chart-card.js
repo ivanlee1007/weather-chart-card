@@ -1005,6 +1005,14 @@ const ALT_SCHEMA = [
   { name: "visibility", title: "Alternative visibility sensor", selector: { entity: { domain: 'sensor' } } },
 ];
 
+
+const ALERT_SCHEMA = [
+  { name: "alert_entity_1", title: "Alert notification sensor 1", selector: { entity: { domain: 'sensor' } } },
+  { name: "alert_entity_2", title: "Alert notification sensor 2", selector: { entity: { domain: 'sensor' } } },
+  { name: "alert_entity_3", title: "Alert notification sensor 3", selector: { entity: { domain: 'sensor' } } },
+  { name: "alert_max_items", title: "Maximum alert banners", selector: { number: { min: 1, max: 5, step: 1, mode: 'box' } } },
+];
+
 const TEXT_SENSOR_SCHEMA = [
   { name: "text_sensor_entity", title: "Text sensor entity", selector: { entity: { domain: 'sensor' } } },
   { name: "text_sensor_title", title: "Text sensor title", selector: { text: {} } },
@@ -1212,6 +1220,8 @@ class WeatherChartCardEditor extends s {
     } else if (section === 'alternate') {
       newConfig = { ...newConfig, ...formValue };
     } else if (section === 'text-sensor') {
+      newConfig = { ...newConfig, ...formValue };
+    } else if (section === 'alerts') {
       newConfig = { ...newConfig, ...formValue };
     }
 
@@ -1684,6 +1694,45 @@ class WeatherChartCardEditor extends s {
           </label>
         ` : ''}
       </div>
+
+      <div class="switch-container">
+        <ha-switch
+          @change="${(e) => this._valueChanged(e, 'show_alerts')}"
+          .checked="${this._config.show_alerts === true}"
+        ></ha-switch>
+        <label class="switch-label">
+          Show OpenCWA alert banners
+        </label>
+      </div>
+      <div style="${this._config.show_alerts ? 'display: block;' : 'display: none;'}">
+        <ha-form
+          .data=${{
+            alert_entity_1: this._config.alert_entity_1 || (Array.isArray(this._config.alert_entities) ? this._config.alert_entities[0] || '' : ''),
+            alert_entity_2: this._config.alert_entity_2 || (Array.isArray(this._config.alert_entities) ? this._config.alert_entities[1] || '' : ''),
+            alert_entity_3: this._config.alert_entity_3 || (Array.isArray(this._config.alert_entities) ? this._config.alert_entities[2] || '' : ''),
+            alert_max_items: Number(this._config.alert_max_items || 3),
+          }}
+          .schema=${ALERT_SCHEMA}
+          .hass=${this.hass}
+          data-section="alerts"
+          @value-changed=${this._formValueChanged}
+        ></ha-form>
+        <div class="switch-container">
+          <ha-switch
+            @change="${(e) => this._valueChanged(e, 'alert_show_message')}"
+            .checked="${this._config.alert_show_message !== false}"
+          ></ha-switch>
+          <label class="switch-label">Show full alert message</label>
+        </div>
+        <div class="switch-container">
+          <ha-switch
+            @change="${(e) => this._valueChanged(e, 'alert_flash_critical')}"
+            .checked="${this._config.alert_flash_critical !== false}"
+          ></ha-switch>
+          <label class="switch-label">Flash critical alerts</label>
+        </div>
+      </div>
+
       <div class="switch-container">
         <ha-switch
           @change="${(e) => this._valueChanged(e, 'show_text_sensor')}"
@@ -18295,6 +18344,22 @@ static getStubConfig(hass, unusedEntities, allEntities) {
     text_sensor_title: '',
     text_sensor_title_size: 14,
     text_sensor_content_size: 13,
+    show_alerts: false,
+    alert_entities: [],
+    alert_entity_1: '',
+    alert_entity_2: '',
+    alert_entity_3: '',
+    alert_show_message: true,
+    alert_flash_critical: true,
+    alert_max_items: 3,
+    show_alerts: false,
+    alert_entities: [],
+    alert_entity_1: '',
+    alert_entity_2: '',
+    alert_entity_3: '',
+    alert_show_message: true,
+    alert_flash_critical: true,
+    alert_max_items: 3,
     show_forecast_toggle: false,
     use_12hour_format: false,
     icons_size: 30,
@@ -19840,6 +19905,77 @@ updateChart({ forecasts, forecastChart } = this) {
           margin-top: 5px;
           font-weight: 400;
         }
+        .weather-alerts-section {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-bottom: 14px;
+        }
+        .weather-alert-banner {
+          border-radius: 12px;
+          padding: 12px 14px;
+          color: #fff;
+          cursor: pointer;
+          border: 2px solid rgba(255, 255, 255, 0.45);
+          box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+          overflow: hidden;
+        }
+        .weather-alert-banner.critical {
+          background: linear-gradient(135deg, #8b0000, #e00032 55%, #ff1744);
+          border-color: #ff8a80;
+          box-shadow: 0 0 20px rgba(255, 23, 68, 0.70);
+        }
+        .weather-alert-banner.critical.flash {
+          animation: weatherAlertPulse 1.8s ease-in-out infinite;
+        }
+        .weather-alert-banner.warning {
+          background: linear-gradient(135deg, #bf360c, #f57c00 60%, #ff9800);
+          border-color: #ffd180;
+        }
+        .weather-alert-banner.advisory {
+          background: linear-gradient(135deg, #1a237e, #3949ab 55%, #5e35b1);
+          border-color: #b39ddb;
+        }
+        .weather-alert-banner.info {
+          background: linear-gradient(135deg, #006064, #00838f);
+          border-color: #80deea;
+        }
+        .weather-alert-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 800;
+          font-size: 15px;
+          line-height: 1.25;
+        }
+        .weather-alert-icon {
+          font-size: 20px;
+          line-height: 1;
+        }
+        .weather-alert-summary {
+          margin-top: 5px;
+          font-weight: 650;
+          opacity: 0.96;
+        }
+        .weather-alert-message {
+          margin-top: 8px;
+          font-size: 13px;
+          line-height: 1.45;
+          white-space: pre-wrap;
+          opacity: 0.96;
+        }
+        .weather-alert-count {
+          margin-left: auto;
+          font-size: 12px;
+          font-weight: 800;
+          padding: 2px 7px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.22);
+        }
+        @keyframes weatherAlertPulse {
+          0%, 100% { transform: scale(1); filter: brightness(1); }
+          50% { transform: scale(1.01); filter: brightness(1.18); }
+        }
         .text-sensor-section {
           margin-top: 14px;
           padding-top: 12px;
@@ -19883,6 +20019,7 @@ updateChart({ forecasts, forecastChart } = this) {
 
       <ha-card header="${config.title}">
         <div class="card">
+          ${this.renderAlertBanner()}
           ${this.renderClock()}
           ${this.renderMain()}
           ${this.renderAttributes()}
@@ -19904,6 +20041,71 @@ getTextSensorState() {
   }
 
   return this._hass.states[this.config.text_sensor_entity] || null;
+}
+
+
+getAlertEntities({ config } = this) {
+  const configured = [];
+  if (Array.isArray(config.alert_entities)) {
+    configured.push(...config.alert_entities);
+  }
+  configured.push(config.alert_entity_1, config.alert_entity_2, config.alert_entity_3);
+  return [...new Set(configured.filter((entity) => typeof entity === 'string' && entity.trim() !== ''))];
+}
+
+getActiveAlertStates({ config } = this) {
+  if (config.show_alerts !== true || !this._hass || !this._hass.states) {
+    return [];
+  }
+  const severityRank = { critical: 0, warning: 1, advisory: 2, info: 3 };
+  const maxItems = Math.max(1, Number(config.alert_max_items || 3));
+  return this.getAlertEntities({ config })
+    .map((entityId) => ({ entityId, stateObj: this._hass.states[entityId] }))
+    .filter(({ stateObj }) => stateObj && stateObj.state === 'active')
+    .sort((a, b) => {
+      const aSeverity = a.stateObj.attributes ? a.stateObj.attributes.severity : undefined;
+      const bSeverity = b.stateObj.attributes ? b.stateObj.attributes.severity : undefined;
+      const aRank = severityRank[aSeverity] !== undefined ? severityRank[aSeverity] : 99;
+      const bRank = severityRank[bSeverity] !== undefined ? severityRank[bSeverity] : 99;
+      return aRank - bRank;
+    })
+    .slice(0, maxItems);
+}
+
+alertIcon(severity) {
+  if (severity === 'critical') return '🚨';
+  if (severity === 'warning') return '⚠️';
+  if (severity === 'advisory') return '🌀';
+  return 'ℹ️';
+}
+
+renderAlertBanner({ config } = this) {
+  const alerts = this.getActiveAlertStates({ config });
+  if (!alerts.length) {
+    return x``;
+  }
+  return x`
+    <div class="weather-alerts-section">
+      ${alerts.map(({ entityId, stateObj }, index) => {
+        const attrs = stateObj.attributes || {};
+        const severity = attrs.severity || 'info';
+        const title = attrs.title || attrs.friendly_name || entityId;
+        const summary = attrs.summary || '';
+        const message = attrs.message || '';
+        const flash = severity === 'critical' && config.alert_flash_critical !== false;
+        return x`
+          <div class="weather-alert-banner ${severity} ${flash ? 'flash' : ''}" @click="${() => this.showMoreInfo(entityId)}">
+            <div class="weather-alert-header">
+              <span class="weather-alert-icon">${this.alertIcon(severity)}</span>
+              <span>${title}</span>
+            </div>
+            ${summary ? x`<div class="weather-alert-summary">${summary}</div>` : x``}
+            ${config.alert_show_message !== false && message ? x`<div class="weather-alert-message">${message}</div>` : x``}
+          </div>
+        `;
+      })}
+    </div>
+  `;
 }
 
 renderTextSensor({ config } = this) {
